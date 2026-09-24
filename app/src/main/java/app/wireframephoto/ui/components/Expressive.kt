@@ -10,7 +10,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.InteractionSource
@@ -23,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
@@ -36,7 +34,6 @@ import androidx.graphics.shapes.circle
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
 import app.wireframephoto.ui.theme.LocalReducedMotion
-import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
 import kotlinx.coroutines.launch
 import kotlin.math.floor
@@ -60,28 +57,12 @@ fun animateCells(targets: List<Rect>): List<Rect> {
     return targets.indices.map { i -> animated.getOrNull(i)?.value ?: targets[i] }
 }
 
-/**
- * Squish-on-press for any clickable surface. Darkroom: a uniform Material 3 Expressive squish.
- * Album (jelly): squash-and-stretch — wider and flatter while held, keeping its volume, then a
- * wobbly overshoot on release, like pressing a gummy.
- */
+/** Squish-on-press (Material 3 Expressive feel) for any clickable surface. */
 @Composable
 fun Modifier.pressScale(interactionSource: InteractionSource, pressedScale: Float = 0.96f): Modifier {
     val pressed by interactionSource.collectIsPressedAsState()
-    if (!LocalWfPalette.current.jelly || LocalReducedMotion.current) {
-        val scale by animateFloatAsState(if (pressed) pressedScale else 1f, Wf.bouncy(), label = "press")
-        return graphicsLayer { scaleX = scale; scaleY = scale }
-    }
-    val squash = 1f - pressedScale
-    // Firm going in, loose coming out: the release is where the jelly wobbles.
-    val spec = if (pressed) spring<Float>(dampingRatio = 0.7f, stiffness = 1400f) else spring(dampingRatio = 0.28f, stiffness = 520f)
-    val sx by animateFloatAsState(if (pressed) 1f + squash * 0.9f else 1f, spec, label = "pressX")
-    val sy by animateFloatAsState(if (pressed) 1f - squash * 2.2f else 1f, spec, label = "pressY")
-    return graphicsLayer {
-        scaleX = sx
-        scaleY = sy
-        transformOrigin = TransformOrigin(0.5f, 0.8f)
-    }
+    val scale by animateFloatAsState(if (pressed) pressedScale else 1f, Wf.bouncy(), label = "press")
+    return graphicsLayer { scaleX = scale; scaleY = scale }
 }
 
 /**

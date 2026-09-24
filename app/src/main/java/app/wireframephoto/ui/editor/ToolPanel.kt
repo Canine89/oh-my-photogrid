@@ -84,10 +84,9 @@ import app.wireframephoto.core.Templates
 import app.wireframephoto.render.BitmapLoader
 import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.components.PurposeRow
-import app.wireframephoto.ui.components.jellyButton
-import app.wireframephoto.ui.components.jellyButtonColors
-import app.wireframephoto.ui.components.jellyChip
-import app.wireframephoto.ui.components.jellyPop
+import app.wireframephoto.ui.components.glassButton
+import app.wireframephoto.ui.components.glassButtonColors
+import app.wireframephoto.ui.components.glassChip
 import app.wireframephoto.ui.components.pressScale
 import app.wireframephoto.ui.components.wfSurface
 import app.wireframephoto.ui.theme.LocalWfPalette
@@ -128,16 +127,16 @@ fun ToolSidePanel(
     callbacks: ToolCallbacks,
     modifier: Modifier = Modifier,
 ) {
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         modifier.wfSurface(Wf.Card, Wf.SheetShape, 16.dp),
         shape = Wf.SheetShape,
-        color = if (jelly) Color.Transparent else Wf.Card,
-        border = if (jelly) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (glass) Color.Transparent else Wf.Card,
+        border = if (glass) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(Modifier.fillMaxSize()) {
             Row(
-                Modifier.padding(10.dp).fillMaxWidth().background(Wf.Bg, Wf.PillShape).padding(4.dp),
+                Modifier.padding(10.dp).fillMaxWidth().background(if (glass) Wf.Well else Wf.Bg, Wf.PillShape).padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Tool.entries.forEach { t -> ToolPill(t, tool == t, Modifier.weight(1f)) { onTool(t) } }
@@ -163,15 +162,15 @@ fun FloatingToolBar(
     modifier: Modifier = Modifier,
 ) {
     val alpha by animateFloatAsState(if (dimmed) 0.25f else 1f, Wf.snappy(), label = "toolbarAlpha")
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         modifier = modifier.alpha(alpha).then(
-            if (jelly) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 16.dp)
+            if (glass) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 16.dp)
             else Modifier.shadow(18.dp, Wf.PillShape, ambientColor = Color.Black, spotColor = Color.Black),
         ),
         shape = Wf.PillShape,
-        color = if (jelly) Color.Transparent else Wf.Raised.copy(alpha = 0.97f),
-        border = if (jelly) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
+        color = if (glass) Color.Transparent else Wf.Raised.copy(alpha = 0.97f),
+        border = if (glass) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
     ) {
         Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Tool.entries.forEach { t -> ToolPill(t, openTool == t, Modifier.width(66.dp)) { onToggle(t) } }
@@ -187,15 +186,15 @@ fun ShufflePill(onShuffle: () -> Unit, dimmed: Boolean, modifier: Modifier = Mod
     val alpha by animateFloatAsState(if (dimmed) 0.25f else 1f, Wf.snappy(), label = "shuffleAlpha")
     val haptics = LocalHapticFeedback.current
     val interaction = remember { MutableInteractionSource() }
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         onClick = { haptics.performHapticFeedback(HapticFeedbackType.Confirm); onShuffle() },
         shape = Wf.PillShape,
-        color = if (jelly) Color.Transparent else Wf.Raised.copy(alpha = 0.97f),
-        border = if (jelly) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
+        color = if (glass) Color.Transparent else Wf.Raised.copy(alpha = 0.97f),
+        border = if (glass) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
         interactionSource = interaction,
         modifier = modifier.alpha(alpha).pressScale(interaction)
-            .then(if (jelly) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(14.dp, Wf.PillShape))
+            .then(if (glass) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(14.dp, Wf.PillShape))
             .testTag("shuffle"),
     ) {
         Row(Modifier.padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -210,11 +209,11 @@ fun ShufflePill(onShuffle: () -> Unit, dimmed: Boolean, modifier: Modifier = Mod
 private fun ShuffleButton(onShuffle: () -> Unit) {
     val haptics = LocalHapticFeedback.current
     val interaction = remember { MutableInteractionSource() }
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         onClick = { haptics.performHapticFeedback(HapticFeedbackType.Confirm); onShuffle() },
         shape = CircleShape,
-        color = if (jelly) Color.Transparent else Wf.Accent,
+        color = if (glass) Color.Transparent else Wf.Accent,
         contentColor = Wf.OnAccent,
         interactionSource = interaction,
         modifier = Modifier.size(52.dp).pressScale(interaction, 0.88f).wfSurface(Wf.Accent, CircleShape, 6.dp).testTag("shuffle")
@@ -245,7 +244,7 @@ private fun ToolPill(tool: Tool, selected: Boolean, modifier: Modifier, onClick:
     ) {
         Box(
             Modifier.size(width = 52.dp, height = 30.dp)
-                .then(if (LocalWfPalette.current.jelly) Modifier.jellyChip(selected, idle = Color.Transparent).clip(Wf.PillShape) else Modifier.background(bg, Wf.PillShape)),
+                .then(if (LocalWfPalette.current.glass) Modifier.glassChip(selected, idle = Color.Transparent).clip(Wf.PillShape) else Modifier.background(bg, Wf.PillShape)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(tool.icon, contentDescription = null, tint = fg, modifier = Modifier.size(20.dp))
@@ -290,8 +289,8 @@ fun ToolSection(
 }
 
 @Composable
-private fun pillChipColors() = if (LocalWfPalette.current.jelly) {
-    // The jelly body is drawn by Modifier.jellyChip; the chip itself stays clear.
+private fun pillChipColors() = if (LocalWfPalette.current.glass) {
+    // The glass body is drawn by Modifier.glassChip; the chip itself stays clear.
     FilterChipDefaults.filterChipColors(
         containerColor = Color.Transparent,
         labelColor = Wf.TextDim,
@@ -335,7 +334,7 @@ private fun LayoutSection(state: CollageState, loader: BitmapLoader, onSelect: (
                         shape = Wf.PillShape,
                         colors = pillChipColors(),
                         border = null,
-                        modifier = Modifier.jellyChip(count == n),
+                        modifier = Modifier.glassChip(count == n),
                     )
                 }
             }
@@ -346,7 +345,7 @@ private fun LayoutSection(state: CollageState, loader: BitmapLoader, onSelect: (
             Box(
                 Modifier
                     .pressScale(interaction, 0.92f)
-                    .jellyPop(selected)
+                    
                     .wfSurface(if (selected) Wf.Raised else Wf.Well, RoundedCornerShape(16.dp), if (selected) 8.dp else 2.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .border(if (selected) BorderStroke(2.5.dp, Wf.AccentInk) else BorderStroke(0.dp, Color.Transparent), RoundedCornerShape(16.dp))
@@ -392,9 +391,9 @@ private fun PhotosSection(state: CollageState, selectedCell: Int?, loader: Bitma
                     onClick = callbacks.onAddPhotos,
                     enabled = state.photoCount < Templates.MAX_PHOTOS,
                     shape = Wf.PillShape,
-                    colors = if (LocalWfPalette.current.jelly) jellyButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
+                    colors = if (LocalWfPalette.current.glass) glassButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
                     modifier = Modifier.fillMaxWidth().height(48.dp)
-                        .jellyButton(Wf.Accent, enabled = state.photoCount < Templates.MAX_PHOTOS).testTag("add_photos"),
+                        .glassButton(Wf.Accent, enabled = state.photoCount < Templates.MAX_PHOTOS).testTag("add_photos"),
                 ) {
                     Icon(Icons.Outlined.AddPhotoAlternate, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.size(8.dp))
@@ -421,7 +420,7 @@ private fun PhotoTile(number: Int, uri: String?, selected: Boolean, loader: Bitm
         Modifier
             .aspectRatio(1f)
             .pressScale(interaction, 0.92f)
-            .jellyPop(selected)
+            
             .wfSurface(Wf.Well, shape, if (selected) 8.dp else 3.dp)
             .clip(shape)
             .border(if (selected) BorderStroke(3.dp, Wf.AccentInk) else BorderStroke(0.dp, Color.Transparent), shape)
@@ -470,7 +469,7 @@ private fun StyleSection(style: CollageStyle, onChange: (CollageStyle, Boolean) 
                     shape = Wf.PillShape,
                     colors = pillChipColors(),
                     border = null,
-                    modifier = Modifier.jellyChip(StylePresets.matches(p, style)),
+                    modifier = Modifier.glassChip(StylePresets.matches(p, style)),
                 )
             }
         }

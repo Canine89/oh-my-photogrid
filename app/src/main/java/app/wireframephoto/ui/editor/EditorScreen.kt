@@ -77,6 +77,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -102,9 +105,14 @@ import app.wireframephoto.ui.EditorViewModel
 import app.wireframephoto.ui.ImagesOnly
 import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.persistReadAccess
-import app.wireframephoto.ui.components.JellyBackdrop
-import app.wireframephoto.ui.components.jellyButton
-import app.wireframephoto.ui.components.jellyButtonColors
+import app.wireframephoto.ui.components.GlassBackdrop
+import app.wireframephoto.ui.components.LocalGlassState
+import app.wireframephoto.ui.components.inkFor
+import app.wireframephoto.ui.components.photoAccent
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import app.wireframephoto.ui.components.glassButton
+import app.wireframephoto.ui.components.glassButtonColors
 import app.wireframephoto.ui.components.wfSurface
 import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
@@ -116,9 +124,34 @@ private const val PREFS = "ui"
 private const val KEY_GUIDE_SEEN = "guide_seen"
 private val ToolbarHeight = 76.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * In the 가족 앨범 (glass) theme the editor takes its accent from the photos being edited, so
+ * buttons and selections belong to this family's pictures; Darkroom keeps its lime.
+ */
 @Composable
 fun EditorScreen(viewModel: EditorViewModel) {
+    val palette = LocalWfPalette.current
+    if (!palette.glass) return EditorContent(viewModel)
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val uris = state.slots.take(state.template.count).mapNotNull { it.uri }
+    val fromPhotos by produceState<Color?>(null, uris) {
+        val colors = uris.mapNotNull { viewModel.loader.averageColor(it) }
+        if (colors.isNotEmpty()) value = photoAccent(Color(ColorUtils.blendARGB(colors.first(), colors.last(), 0.5f)))
+    }
+    val accent by animateColorAsState(fromPhotos ?: palette.accent, Wf.snappy(), label = "photoAccent")
+    val ink = inkFor(accent)
+    CompositionLocalProvider(LocalWfPalette provides palette.copy(accent = accent, accentInk = ink)) {
+        MaterialTheme(
+            colorScheme = MaterialTheme.colorScheme.copy(primary = accent),
+            typography = MaterialTheme.typography,
+            shapes = MaterialTheme.shapes,
+        ) { EditorContent(viewModel) }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditorContent(viewModel: EditorViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selected by viewModel.selectedCell.collectAsStateWithLifecycle()
     val canUndo by viewModel.canUndo.collectAsStateWithLifecycle()
@@ -201,11 +234,18 @@ fun EditorScreen(viewModel: EditorViewModel) {
         )
     }
 
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
+    // Glass theme: the collage's own photos, blurred into light, are the page behind the glass.
+    val hazeState = rememberHazeState()
+    val backdropUris = state.slots.take(state.template.count).mapNotNull { it.uri }.take(4)
+    val backdropPhotos by produceState(emptyList<ImageBitmap>(), backdropUris, glass) {
+        if (glass) value = backdropUris.mapNotNull { viewModel.loader.loadPreview(it)?.asImageBitmap() }
+    }
     Box(Modifier.fillMaxSize()) {
-    JellyBackdrop(Modifier.matchParentSize())
+    GlassBackdrop(Modifier.matchParentSize().hazeSource(hazeState), backdropPhotos)
+    CompositionLocalProvider(LocalGlassState provides hazeState) {
     Scaffold(
-        containerColor = if (jelly) Color.Transparent else MaterialTheme.colorScheme.background,
+        containerColor = if (glass) Color.Transparent else MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -239,9 +279,9 @@ fun EditorScreen(viewModel: EditorViewModel) {
                         onClick = { showExportOptions = true },
                         enabled = state.photoCount > 0,
                         shape = Wf.PillShape,
-                        colors = jellyButtonColors(),
+                        colors = glassButtonColors(),
                         modifier = Modifier.padding(start = 4.dp, end = 10.dp)
-                            .jellyButton(MaterialTheme.colorScheme.primary, enabled = state.photoCount > 0).testTag("save"),
+                            .glassButton(MaterialTheme.colorScheme.primary, enabled = state.photoCount > 0).testTag("save"),
                     ) { Text("저장", fontWeight = FontWeight.ExtraBold) }
                 },
             )
@@ -361,6 +401,7 @@ fun EditorScreen(viewModel: EditorViewModel) {
         }
     }
     }
+    }
 
     if (confirmExit) {
         AlertDialog(
@@ -394,13 +435,13 @@ private fun sidePanelWidth(total: Dp): Dp = (total * 0.38f).coerceIn(340.dp, 460
 /** Folded screen: the open tool as a floating rounded sheet above the toolbar. */
 @Composable
 private fun CompactToolSheet(tool: Tool, onClose: () -> Unit, modifier: Modifier, content: @Composable () -> Unit) {
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
-        modifier.then(if (jelly) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 18.dp) else Modifier.shadow(20.dp, Wf.SheetShape))
+        modifier.then(if (glass) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 18.dp) else Modifier.shadow(20.dp, Wf.SheetShape))
             .testTag("panel_${tool.name}"),
         shape = Wf.SheetShape,
-        color = if (jelly) Color.Transparent else Wf.Card,
-        border = if (jelly) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (glass) Color.Transparent else Wf.Card,
+        border = if (glass) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 18.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -463,7 +504,9 @@ private fun CanvasArea(
     val cell = selected?.takeIf { it < state.template.count }
     val bottomBar = cell != null || floatingShuffle
     Box(modifier) {
-        AmbientGlow(state, viewModel.loader, Modifier.fillMaxSize())
+        // Glass theme: the blurred photos behind already carry their color.
+        if (!LocalWfPalette.current.glass) AmbientGlow(state, viewModel.loader, Modifier.fillMaxSize())
+        val glassState = LocalGlassState.current
         CollageCanvas(
             state = state,
             selectedCell = selected,
@@ -471,7 +514,9 @@ private fun CanvasArea(
             actions = actions,
             deviceFrame = deviceFrame,
             showNumbers = showNumbers,
-            modifier = Modifier.fillMaxSize().padding(18.dp).padding(bottom = if (bottomBar) 60.dp else 0.dp),
+            modifier = Modifier.fillMaxSize().padding(18.dp).padding(bottom = if (bottomBar) 60.dp else 0.dp)
+                // Glass bars floating over the collage frost the photos under them.
+                .then(if (glassState != null) Modifier.hazeSource(glassState, zIndex = 1f) else Modifier),
         )
         AnimatedVisibility(
             visible = cell != null,
@@ -508,13 +553,13 @@ private fun CellActionBar(
     onClear: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
-        modifier = Modifier.then(if (jelly) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(16.dp, Wf.PillShape))
+        modifier = Modifier.then(if (glass) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(16.dp, Wf.PillShape))
             .testTag("cell_actions"),
         shape = Wf.PillShape,
-        color = if (jelly) Color.Transparent else Wf.Raised,
-        border = if (jelly) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
+        color = if (glass) Color.Transparent else Wf.Raised,
+        border = if (glass) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
     ) {
         Row(Modifier.padding(start = 8.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(28.dp).wfSurface(Wf.Accent, CircleShape, 3.dp), contentAlignment = Alignment.Center) {
@@ -545,14 +590,14 @@ private fun CellActionBar(
 /** First-run (and "?" button) explanation of the gestures, which are otherwise invisible. */
 @Composable
 private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         Modifier.widthIn(max = 440.dp)
-            .then(if (jelly) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 20.dp) else Modifier.shadow(24.dp, Wf.SheetShape))
+            .then(if (glass) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 20.dp) else Modifier.shadow(24.dp, Wf.SheetShape))
             .testTag("guide"),
         shape = Wf.SheetShape,
-        color = if (jelly) Color.Transparent else Wf.Card,
-        border = if (jelly) null else BorderStroke(1.dp, Wf.Line),
+        color = if (glass) Color.Transparent else Wf.Card,
+        border = if (glass) null else BorderStroke(1.dp, Wf.Line),
     ) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(22.dp),
@@ -566,8 +611,8 @@ private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
             Button(
                 onClick = onDismiss,
                 shape = Wf.PillShape,
-                colors = jellyButtonColors(),
-                modifier = Modifier.align(Alignment.End).jellyButton(MaterialTheme.colorScheme.primary).testTag("guide_ok"),
+                colors = glassButtonColors(),
+                modifier = Modifier.align(Alignment.End).glassButton(MaterialTheme.colorScheme.primary).testTag("guide_ok"),
             ) { Text("알겠어요", fontWeight = FontWeight.Bold) }
         }
     }

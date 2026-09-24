@@ -24,7 +24,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
-import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.LineBreak
@@ -38,7 +37,7 @@ enum class AppTheme(val label: String) {
     /** Always dark, near-neutral, lime accent: photos carry all the color. */
     Darkroom("다크룸"),
 
-    /** Candy-colored "jelly" family album: squishy glossy surfaces, rounded type, bouncy motion. */
+    /** Warm liquid glass: frosted panes over the family photos' own colors. */
     Album("가족 앨범"),
 }
 
@@ -59,7 +58,7 @@ fun Context.saveAppTheme(theme: AppTheme) {
  * in every theme; Print is the white of photo paper (thumbnails, the saved-collage print).
  */
 @Immutable
-class WfPalette(
+data class WfPalette(
     val isLight: Boolean,
     val bg: Color,
     val card: Color,
@@ -82,9 +81,9 @@ class WfPalette(
     val deviceScreen: Color,
     val glow: Color,
     val colorScheme: ColorScheme,
-    /** Surfaces render as glossy jelly and presses squash and wobble (see components/Jelly.kt). */
-    val jelly: Boolean = false,
-    /** Candy blobs drifting behind the page when [jelly]. */
+    /** Surfaces render as frosted glass over a warm backdrop (see components/Glass.kt). */
+    val glass: Boolean = false,
+    /** Warm color blobs behind the glass on screens without photos, when [glass]. */
     val backdrop: List<Color> = emptyList(),
 )
 
@@ -144,64 +143,63 @@ private val Darkroom = run {
 }
 
 /**
- * "가족 앨범" as candy jelly. Family photo apps aim for warm, soft and safe; claymorphism-style
- * "digital texture" makes that tactile. Strawberry-milk page, honey and strawberry jelly for
- * the things you touch, mint and peach as friends, cocoa ink. Text colors keep 4.5:1 or better.
+ * "가족 앨범" as warm liquid glass (the iOS 26-era translucent look, warmed for family photos).
+ * Surfaces are frosted panes; the color comes from what is behind them — soft peach, apricot, sky
+ * and sage on the home screen, the user's own photos in the editor. Coral accent (in the editor,
+ * re-derived from the photos), warm near-black ink. Text colors keep 4.5:1 or better.
  */
 private val Album = run {
-    val milk = Color(0xFFFFF4EA)
+    val page = Color(0xFFF6EEE6)
     val white = Color(0xFFFFFFFF)
-    val peachCream = Color(0xFFFFE7D9)
-    val blush = Color(0xFFF4D5C4)
-    val cocoa = Color(0xFF4A3228)
-    val latte = Color(0xFF735649)
-    val honey = Color(0xFFFFC94D)
-    val strawberry = Color(0xFFC73A4A)
-    val mint = Color(0xFF7FD1AE)
-    val pink = Color(0xFFFF8FA3)
+    val pearl = Color(0xFFFFFBF7)
+    val mist = Color(0xFFEFE4DA)
+    val ink = Color(0xFF2E2320)
+    val taupe = Color(0xFF66554C)
+    val coral = Color(0xFFC4513A)
+    val coralInk = Color(0xFFA8432F)
     WfPalette(
         isLight = true,
-        bg = milk, card = Color(0xFFFFFBF7), well = peachCream, raised = white, line = blush, text = cocoa, textDim = latte,
-        accent = honey, onAccent = cocoa, accentInk = strawberry, accent2 = mint, accent3 = pink,
-        print = white, printHole = Color(0xFFFBE3D3),
-        // A strawberry-milk silicone jelly case; the screen itself stays dark like a real phone.
-        deviceBody = Color(0xFFFFB3C1), deviceEdge = Color(0xFFF48FA5), deviceScreen = Color(0xFF2E2226),
-        glow = Color(0xFFFFB38A),
+        bg = page, card = pearl, well = white.copy(alpha = 0.45f), raised = white, line = Color(0xFFE6D9CE), text = ink, textDim = taupe,
+        accent = coral, onAccent = white, accentInk = coralInk, accent2 = Color(0xFF7FA88A), accent3 = Color(0xFF7FB3DA),
+        print = white, printHole = mist,
+        // A frosted glass phone; the screen itself stays dark like a real one.
+        deviceBody = white.copy(alpha = 0.55f), deviceEdge = white, deviceScreen = Color(0xFF2A2220),
+        glow = Color(0xFFFFB08A),
         colorScheme = lightColorScheme(
-            primary = strawberry,
+            primary = coral,
             onPrimary = white,
-            primaryContainer = Color(0xFFFFE0E3),
-            onPrimaryContainer = Color(0xFF5A1420),
-            secondary = Color(0xFF2F7A5B),
+            primaryContainer = Color(0xFFFFE1D8),
+            onPrimaryContainer = Color(0xFF5A1C0E),
+            secondary = Color(0xFF4F6F58),
             onSecondary = white,
-            secondaryContainer = peachCream,
-            onSecondaryContainer = cocoa,
-            tertiary = Color(0xFF8A5A00),
+            secondaryContainer = mist,
+            onSecondaryContainer = ink,
+            tertiary = Color(0xFF3F6A8A),
             onTertiary = white,
-            background = milk,
-            onBackground = cocoa,
-            surface = milk,
-            onSurface = cocoa,
-            surfaceVariant = peachCream,
-            onSurfaceVariant = latte,
+            background = page,
+            onBackground = ink,
+            surface = page,
+            onSurface = ink,
+            surfaceVariant = mist,
+            onSurfaceVariant = taupe,
             surfaceContainerLowest = white,
-            surfaceContainerLow = Color(0xFFFFFBF7),
-            surfaceContainer = peachCream,
-            surfaceContainerHigh = Color(0xFFFFE0CF),
-            surfaceContainerHighest = blush,
-            outline = Color(0xFF9C7B6C),
-            outlineVariant = blush,
-            inverseSurface = cocoa,
-            inverseOnSurface = milk,
+            surfaceContainerLow = pearl,
+            surfaceContainer = mist,
+            surfaceContainerHigh = Color(0xFFE9DDD2),
+            surfaceContainerHighest = Color(0xFFE2D4C8),
+            outline = Color(0xFF8E7C72),
+            outlineVariant = Color(0xFFE6D9CE),
+            inverseSurface = ink,
+            inverseOnSurface = page,
             error = Color(0xFFB3261E),
         ),
-        jelly = true,
+        glass = true,
         backdrop = listOf(
-            Color(0x66FFD66B), // honey
-            Color(0x55FFB3C1), // strawberry milk
-            Color(0x559FE3C4), // mint
-            Color(0x4DA9D8FF), // sky
-            Color(0x4DFFB38A), // peach
+            Color(0xE6FFB08A), // peach
+            Color(0xD9FFD69A), // apricot
+            Color(0xCCA8D4F5), // sky
+            Color(0xCCBFDDB0), // sage
+            Color(0xB3F5B5BE), // rose
         ),
     )
 }
@@ -289,29 +287,8 @@ private fun pretendardType(heavy: Int, bold: Int, tight: Float) = Typography().r
 
 private val DarkroomType = pretendardType(heavy = 800, bold = 700, tight = 1f)
 
-private val Jua = FontFamily(Font(R.font.jua))
-
-/**
- * Album: Jua, a chunky rounded Korean face (OFL), for everything big or tappable; Pretendard 500
- * keeps long text readable. Jua has one weight, so bold is never faked (it would smear).
- */
-private val AlbumType = pretendardType(heavy = 700, bold = 600, tight = 0.5f).run {
-    fun TextStyle.jua(size: Float? = null) = copy(
-        fontFamily = Jua,
-        fontWeight = FontWeight.Normal,
-        fontSynthesis = FontSynthesis.None,
-        letterSpacing = 0.em,
-        fontSize = size?.sp ?: fontSize,
-    )
-    fun TextStyle.body() = copy(fontWeight = FontWeight.Medium)
-    copy(
-        displayLarge = displayLarge.jua(), displayMedium = displayMedium.jua(), displaySmall = displaySmall.jua(),
-        headlineLarge = headlineLarge.jua(), headlineMedium = headlineMedium.jua(), headlineSmall = headlineSmall.jua(),
-        titleLarge = titleLarge.jua(), titleMedium = titleMedium.jua(17f), titleSmall = titleSmall.jua(15f),
-        labelLarge = labelLarge.jua(15f), labelMedium = labelMedium.jua(13f),
-        bodyLarge = bodyLarge.body(), bodyMedium = bodyMedium.body(), bodySmall = bodySmall.body(),
-    )
-}
+/** Album: the same Pretendard, one step lighter with half the tightening — calm, not technical. */
+private val AlbumType = pretendardType(heavy = 700, bold = 600, tight = 0.5f)
 
 private val DarkroomShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),

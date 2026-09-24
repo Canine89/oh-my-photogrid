@@ -71,8 +71,8 @@ import app.wireframephoto.data.ImageSaver
 import app.wireframephoto.render.BitmapLoader
 import app.wireframephoto.ui.ExportStatus
 import app.wireframephoto.ui.components.MorphingLoader
-import app.wireframephoto.ui.components.jellyButton
-import app.wireframephoto.ui.components.jellyButtonColors
+import app.wireframephoto.ui.components.glassButton
+import app.wireframephoto.ui.components.glassButtonColors
 import app.wireframephoto.ui.theme.AppTheme
 import app.wireframephoto.ui.theme.LocalAppTheme
 import app.wireframephoto.ui.theme.LocalWfPalette
@@ -211,8 +211,8 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
             Button(
                 onClick = { context.startActivity(ImageSaver.shareIntent(status.uri, status.mimeType)) },
                 shape = Wf.PillShape,
-                colors = jellyButtonColors(),
-                modifier = Modifier.weight(1f).height(52.dp).jellyButton(MaterialTheme.colorScheme.primary),
+                colors = glassButtonColors(),
+                modifier = Modifier.weight(1f).height(52.dp).glassButton(MaterialTheme.colorScheme.primary),
             ) {
                 Icon(Icons.Outlined.Share, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -228,8 +228,8 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
                         }
                     },
                     shape = Wf.PillShape,
-                    colors = if (LocalWfPalette.current.jelly) jellyButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
-                    modifier = Modifier.weight(1f).height(52.dp).jellyButton(Wf.Accent),
+                    colors = if (LocalWfPalette.current.glass) glassButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
+                    modifier = Modifier.weight(1f).height(52.dp).glassButton(Wf.Accent),
                 ) {
                     Icon(Icons.Outlined.Wallpaper, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -321,8 +321,8 @@ private fun ExportOptionsDialog(
             Button(
                 onClick = { onExport(Scales[scaleIndex], formats[formatIndex]) },
                 shape = Wf.PillShape,
-                colors = jellyButtonColors(),
-                modifier = Modifier.jellyButton(MaterialTheme.colorScheme.primary).testTag("export_confirm"),
+                colors = glassButtonColors(),
+                modifier = Modifier.glassButton(MaterialTheme.colorScheme.primary).testTag("export_confirm"),
             ) { Text("저장", fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },

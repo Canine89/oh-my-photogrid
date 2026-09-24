@@ -26,6 +26,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -74,12 +75,11 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
     val body = Wf.DeviceBody
     val edge = Wf.DeviceEdge
     val screenColor = Wf.DeviceScreen
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Canvas(Modifier.fillMaxWidth().height(height)) {
             drawRect(glow, size = size)
-            // Album: a chunky silicone jelly case around the phone.
-            val bezel = (if (jelly) 11.dp else 6.dp).toPx()
+            val bezel = 6.dp.toPx()
             val box = CollageGeometry.fit(aspect, size.width * 0.9f, size.height * 0.92f)
             val screen = Rect(
                 (size.width - box.width) / 2f + bezel, (size.height - box.height) / 2f + bezel,
@@ -87,13 +87,15 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
             )
             val caseTopLeft = Offset(screen.left - bezel, screen.top - bezel)
             val caseSize = Size(screen.width + 2 * bezel, screen.height + 2 * bezel)
-            val caseCorner = CornerRadius((if (jelly) 24.dp else 18.dp).toPx())
-            if (jelly) {
-                drawJellyRoundRect(body, caseTopLeft, caseSize, caseCorner)
+            val caseCorner = CornerRadius(18.dp.toPx())
+            drawRoundRect(body, caseTopLeft, caseSize, caseCorner)
+            // Album: a frosted glass phone, its rim catching the light at the top.
+            val rim = if (glass) {
+                Brush.verticalGradient(listOf(edge, edge.copy(alpha = 0.3f)), caseTopLeft.y, caseTopLeft.y + caseSize.height)
             } else {
-                drawRoundRect(body, caseTopLeft, caseSize, caseCorner)
+                SolidColor(edge)
             }
-            if (!jelly) drawRoundRect(edge, caseTopLeft, caseSize, caseCorner, style = Stroke(1.dp.toPx()))
+            drawRoundRect(rim, caseTopLeft, caseSize, caseCorner, style = Stroke((if (glass) 1.5.dp else 1.dp).toPx()))
             drawRoundRect(screenColor, Offset(screen.left, screen.top), Size(screen.width, screen.height), CornerRadius(12.dp.toPx()))
             val gap = 3.dp.toPx()
             val px = CollageGeometry.cellRects(

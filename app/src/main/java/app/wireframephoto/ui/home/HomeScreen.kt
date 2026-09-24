@@ -43,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,12 +64,15 @@ import app.wireframephoto.ui.Purpose
 import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.components.BrandMark
 import app.wireframephoto.ui.components.FoldHero
-import app.wireframephoto.ui.components.JellyBackdrop
+import app.wireframephoto.ui.components.GlassBackdrop
+import app.wireframephoto.ui.components.LocalGlassState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import app.wireframephoto.ui.components.PurposeCard
-import app.wireframephoto.ui.components.jellyButton
-import app.wireframephoto.ui.components.jellyButtonColors
-import app.wireframephoto.ui.components.jellyChip
-import app.wireframephoto.ui.components.jellyEnter
+import app.wireframephoto.ui.components.glassButton
+import app.wireframephoto.ui.components.glassButtonColors
+import app.wireframephoto.ui.components.glassChip
+import app.wireframephoto.ui.components.glassEnter
 import app.wireframephoto.ui.components.wfSurface
 import app.wireframephoto.ui.theme.AppTheme
 import app.wireframephoto.ui.theme.LocalWfPalette
@@ -91,10 +95,12 @@ fun HomeScreen(
     onDismissUpdate: (AvailableUpdate) -> Unit,
     onPurpose: (Purpose) -> Unit,
 ) {
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
+    val hazeState = rememberHazeState()
     Box(Modifier.fillMaxSize()) {
-    JellyBackdrop(Modifier.matchParentSize())
-    Surface(Modifier.fillMaxSize(), color = if (jelly) Color.Transparent else MaterialTheme.colorScheme.background) {
+    GlassBackdrop(Modifier.matchParentSize().hazeSource(hazeState))
+    CompositionLocalProvider(LocalGlassState provides hazeState) {
+    Surface(Modifier.fillMaxSize(), color = if (glass) Color.Transparent else MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val wide = maxWidth >= 600.dp && maxWidth > maxHeight
             if (wide) {
@@ -152,6 +158,7 @@ fun HomeScreen(
         }
     }
     }
+    }
 }
 
 private fun LazyGridScope.purposeItems(onPurpose: (Purpose) -> Unit, previewHeight: Dp) {
@@ -159,11 +166,11 @@ private fun LazyGridScope.purposeItems(onPurpose: (Purpose) -> Unit, previewHeig
     val social = Purposes.featured.filterNot { it.deviceFrame }
     item(span = { GridItemSpan(maxLineSpan) }) { SectionLabel("갤럭시 Z 폴드 8 배경화면") }
     itemsIndexed(fold, key = { _, p -> p.presetId }) { i, p ->
-        PurposeCard(p, { onPurpose(p) }, previewHeight, Modifier.jellyEnter(i))
+        PurposeCard(p, { onPurpose(p) }, previewHeight, Modifier.glassEnter(i))
     }
     item(span = { GridItemSpan(maxLineSpan) }) { SectionLabel("SNS · 공유용") }
     itemsIndexed(social, key = { _, p -> p.presetId }) { i, p ->
-        PurposeCard(p, { onPurpose(p) }, previewHeight, Modifier.jellyEnter(fold.size + i))
+        PurposeCard(p, { onPurpose(p) }, previewHeight, Modifier.glassEnter(fold.size + i))
     }
 }
 
@@ -190,11 +197,11 @@ private fun UpdateBanner(
     onDismiss: (AvailableUpdate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         shape = Wf.CardShape,
-        color = if (jelly) Color.Transparent else Wf.Card,
-        border = if (jelly) null else BorderStroke(1.dp, Wf.AccentInk.copy(alpha = 0.5f)),
+        color = if (glass) Color.Transparent else Wf.Card,
+        border = if (glass) null else BorderStroke(1.dp, Wf.AccentInk.copy(alpha = 0.5f)),
         modifier = modifier.fillMaxWidth().wfSurface(Wf.Card, Wf.CardShape, 10.dp).testTag("update_banner"),
     ) {
         Row(Modifier.padding(start = 16.dp, end = 6.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -229,9 +236,9 @@ private fun UpdateBanner(
                 onClick = { if (phase == UpdatePhase.Failed) onOpenReleasePage(update) else onUpdate(update) },
                 enabled = !busy,
                 shape = Wf.PillShape,
-                colors = jellyButtonColors(Wf.Accent, Wf.OnAccent),
+                colors = glassButtonColors(Wf.Accent, Wf.OnAccent),
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier.jellyButton(Wf.Accent, enabled = !busy).testTag("update_get"),
+                modifier = Modifier.glassButton(Wf.Accent, enabled = !busy).testTag("update_get"),
             ) { Text(if (phase == UpdatePhase.Failed) "페이지 열기" else "업데이트") }
             IconButton(onClick = { onDismiss(update) }, enabled = !busy, modifier = Modifier.testTag("update_later")) {
                 Icon(Icons.Outlined.Close, contentDescription = "나중에", tint = Wf.TextDim)
@@ -244,7 +251,7 @@ private fun UpdateBanner(
 @Composable
 private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
     val haptics = LocalHapticFeedback.current
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Row(
         Modifier.background(Wf.Well, Wf.PillShape).padding(3.dp).selectableGroup(),
         verticalAlignment = Alignment.CenterVertically,
@@ -255,7 +262,7 @@ private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
             Box(
                 Modifier
                     .heightIn(min = 40.dp)
-                    .then(if (jelly) Modifier.jellyChip(selected) else Modifier.clip(Wf.PillShape).background(container))
+                    .then(if (glass) Modifier.glassChip(selected) else Modifier.clip(Wf.PillShape).background(container))
                     .clip(Wf.PillShape)
                     .selectable(selected, role = Role.RadioButton) {
                         if (!selected) {
@@ -311,7 +318,7 @@ private fun StepChips() {
             Row(
                 Modifier
                     .then(
-                        if (LocalWfPalette.current.jelly) Modifier.wfSurface(Wf.Card, Wf.PillShape, 4.dp)
+                        if (LocalWfPalette.current.glass) Modifier.wfSurface(Wf.Card, Wf.PillShape, 4.dp)
                         else Modifier.border(1.dp, MaterialTheme.colorScheme.outline, Wf.PillShape),
                     )
                     .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),

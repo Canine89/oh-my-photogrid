@@ -99,12 +99,12 @@ fun PurposePreview(purpose: Purpose, modifier: Modifier = Modifier) {
 @Composable
 fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     Surface(
         onClick = onClick,
         shape = Wf.CardShape,
-        color = if (jelly) Color.Transparent else Wf.Card,
-        border = if (jelly) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (glass) Color.Transparent else Wf.Card,
+        border = if (glass) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         interactionSource = interaction,
         modifier = modifier.pressScale(interaction).wfSurface(Wf.Card, Wf.CardShape, 12.dp).testTag("purpose_${purpose.presetId}"),
     ) {
@@ -142,16 +142,16 @@ fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifi
 fun PurposeRow(purpose: Purpose, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val primary = MaterialTheme.colorScheme.primary
     val interaction = remember { MutableInteractionSource() }
-    val jelly = LocalWfPalette.current.jelly
+    val glass = LocalWfPalette.current.glass
     val shape = RoundedCornerShape(20.dp)
     Surface(
         onClick = onClick,
         shape = shape,
-        color = if (jelly) Color.Transparent else if (selected) Wf.Raised else Wf.Well,
+        color = if (glass) Color.Transparent else if (selected) Wf.Raised else Wf.Well,
         border = if (selected) BorderStroke(2.dp, primary) else null,
         interactionSource = interaction,
         modifier = modifier.pressScale(interaction)
-            .then(if (jelly) Modifier.wfSurface(if (selected) Wf.Raised else Wf.Well, shape, if (selected) 8.dp else 2.dp).jellyPop(selected) else Modifier)
+            .then(if (glass) Modifier.wfSurface(if (selected) Wf.Raised else Wf.Well, shape, if (selected) 8.dp else 2.dp) else Modifier)
             .testTag("preset_${purpose.presetId}").semantics { this.selected = selected },
     ) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -176,7 +176,6 @@ fun PurposeRow(purpose: Purpose, selected: Boolean, onClick: () -> Unit, modifie
 @Composable
 fun BrandMark(modifier: Modifier = Modifier) {
     val (a, b, c) = listOf(Wf.Accent, Wf.Accent2, Wf.Accent3)
-    val jelly = LocalWfPalette.current.jelly
     Canvas(modifier) {
         val g = size.minDimension * 0.08f
         val r = CornerRadius(size.minDimension * 0.14f)
@@ -185,12 +184,5 @@ fun BrandMark(modifier: Modifier = Modifier) {
         drawRoundRect(a, Offset(0f, 0f), Size(w * 0.58f - g / 2, h), r)
         drawRoundRect(b, Offset(w * 0.58f + g / 2, 0f), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
         drawRoundRect(c, Offset(w * 0.58f + g / 2, h / 2 + g / 2), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
-        if (jelly) {
-            // A gloss dot on each cell turns the mark into three gummies.
-            val gloss = Color.White.copy(alpha = 0.75f)
-            drawOval(gloss, Offset(w * 0.1f, h * 0.08f), Size(w * 0.3f, h * 0.18f))
-            drawOval(gloss, Offset(w * 0.66f, h * 0.06f), Size(w * 0.22f, h * 0.12f))
-            drawOval(gloss, Offset(w * 0.66f, h * 0.56f), Size(w * 0.22f, h * 0.12f))
-        }
     }
 }

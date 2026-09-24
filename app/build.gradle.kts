@@ -20,8 +20,8 @@ android {
         applicationId = "app.wireframephoto"
         minSdk = 29
         targetSdk = 37
-        versionCode = 6
-        versionName = "1.5.0"
+        versionCode = 7
+        versionName = "1.6.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -78,6 +78,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.window)
     implementation(libs.graphics.shapes)
+    // Frosted-glass backdrop blur for the 가족 앨범 theme (Android 12+; translucent fallback below).
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)

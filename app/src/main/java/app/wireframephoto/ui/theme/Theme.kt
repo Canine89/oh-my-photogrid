@@ -144,12 +144,12 @@ private val Darkroom = run {
 
 /**
  * "가족 앨범" as warm liquid glass (the iOS 26-era translucent look, warmed for family photos).
- * Surfaces are frosted panes; the color comes from what is behind them — soft peach, apricot, sky
- * and sage on the home screen, the user's own photos in the editor. Coral accent (in the editor,
- * re-derived from the photos), warm near-black ink. Text colors keep 4.5:1 or better.
+ * Surfaces are frosted panes; the color comes from what is behind them — soft peach, rose, sky,
+ * sage and lilac on the home screen, the user's own photos in the editor. One coral accent, warm
+ * near-black ink, no yellow or beige cast. Text colors keep 4.5:1 or better.
  */
 private val Album = run {
-    val page = Color(0xFFF6EEE6)
+    val page = Color(0xFFF8F5F3)
     val white = Color(0xFFFFFFFF)
     val pearl = Color(0xFFFFFBF7)
     val mist = Color(0xFFEFE4DA)
@@ -196,7 +196,7 @@ private val Album = run {
         glass = true,
         backdrop = listOf(
             Color(0xE6FFB08A), // peach
-            Color(0xD9FFD69A), // apricot
+            Color(0xB3D9CCF5), // lilac
             Color(0xCCA8D4F5), // sky
             Color(0xCCBFDDB0), // sage
             Color(0xB3F5B5BE), // rose

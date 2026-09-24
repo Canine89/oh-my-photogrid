@@ -70,7 +70,7 @@ scripts/build_release.sh
 1. **ADB (권장, 개발자 인증 예외 대상)**
    폴드 8에서 개발자 옵션 → USB 디버깅을 켠 뒤:
    ```bash
-   adb install -r dist/oh-my-photogrid-1.6.0.apk
+   adb install -r dist/oh-my-photogrid-1.6.1.apk
    ```
 2. **파일로 전달**
    APK를 기기로 옮긴 뒤 내 파일 앱에서 열기 → "이 출처 허용" → 설치.

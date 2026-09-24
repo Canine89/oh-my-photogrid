@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -34,8 +33,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -233,32 +230,8 @@ fun GlassBackdrop(modifier: Modifier = Modifier, photos: List<ImageBitmap> = emp
                 }
             }
         }
-        // A warm milky wash keeps text on glass readable over any photo.
-        val wash = if (photos.isEmpty()) 0.12f else if (canBlur) 0.38f else 0.75f
-        Box(Modifier.matchParentSize().background(palette.bg.copy(alpha = wash)))
+        // A clear white wash keeps text on glass readable over any photo without tinting it.
+        val wash = if (photos.isEmpty()) 0.12f else if (canBlur) 0.3f else 0.75f
+        Box(Modifier.matchParentSize().background(Color.White.copy(alpha = wash)))
     }
 }
-
-/**
- * An accent from the photos' own color, darkened just enough for white text (4.5:1+). Used by
- * the editor so buttons and selections match the family photos being edited.
- */
-fun photoAccent(color: Color): Color {
-    val hsl = FloatArray(3)
-    androidx.core.graphics.ColorUtils.colorToHSL(android.graphics.Color.argb(255, (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt()), hsl)
-    // Muddy photo averages become a clear, friendly hue.
-    hsl[1] = hsl[1].coerceIn(0.5f, 0.75f)
-    hsl[2] = 0.5f
-    var c = Color(androidx.core.graphics.ColorUtils.HSLToColor(hsl))
-    while (contrastWithWhite(c) < 4.7f) c = lerp(c, Color.Black, 0.06f)
-    return c
-}
-
-/** A deeper shade of [accent] for text and rings on the light glass (4.5:1 on the page). */
-fun inkFor(accent: Color): Color {
-    var c = accent
-    while (contrastWithWhite(c) < 5.4f) c = lerp(c, Color.Black, 0.06f)
-    return c
-}
-
-private fun contrastWithWhite(c: Color): Float = 1.05f / (c.luminance() + 0.05f)

@@ -107,8 +107,6 @@ import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.persistReadAccess
 import app.wireframephoto.ui.components.GlassBackdrop
 import app.wireframephoto.ui.components.LocalGlassState
-import app.wireframephoto.ui.components.inkFor
-import app.wireframephoto.ui.components.photoAccent
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import app.wireframephoto.ui.components.glassButton
@@ -124,34 +122,9 @@ private const val PREFS = "ui"
 private const val KEY_GUIDE_SEEN = "guide_seen"
 private val ToolbarHeight = 76.dp
 
-/**
- * In the 가족 앨범 (glass) theme the editor takes its accent from the photos being edited, so
- * buttons and selections belong to this family's pictures; Darkroom keeps its lime.
- */
-@Composable
-fun EditorScreen(viewModel: EditorViewModel) {
-    val palette = LocalWfPalette.current
-    if (!palette.glass) return EditorContent(viewModel)
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val uris = state.slots.take(state.template.count).mapNotNull { it.uri }
-    val fromPhotos by produceState<Color?>(null, uris) {
-        val colors = uris.mapNotNull { viewModel.loader.averageColor(it) }
-        if (colors.isNotEmpty()) value = photoAccent(Color(ColorUtils.blendARGB(colors.first(), colors.last(), 0.5f)))
-    }
-    val accent by animateColorAsState(fromPhotos ?: palette.accent, Wf.snappy(), label = "photoAccent")
-    val ink = inkFor(accent)
-    CompositionLocalProvider(LocalWfPalette provides palette.copy(accent = accent, accentInk = ink)) {
-        MaterialTheme(
-            colorScheme = MaterialTheme.colorScheme.copy(primary = accent),
-            typography = MaterialTheme.typography,
-            shapes = MaterialTheme.shapes,
-        ) { EditorContent(viewModel) }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditorContent(viewModel: EditorViewModel) {
+fun EditorScreen(viewModel: EditorViewModel) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selected by viewModel.selectedCell.collectAsStateWithLifecycle()
     val canUndo by viewModel.canUndo.collectAsStateWithLifecycle()

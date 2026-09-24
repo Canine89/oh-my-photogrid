@@ -39,6 +39,9 @@ enum class AppTheme(val label: String) {
 
     /** Warm liquid glass: frosted panes over the family photos' own colors. */
     Album("가족 앨범"),
+
+    /** Cyanotype blueprint: white line drawing on Prussian blue — a "wireframe" photo studio. */
+    Blueprint("청사진"),
 }
 
 private const val PREFS = "settings"
@@ -81,11 +84,18 @@ data class WfPalette(
     val deviceScreen: Color,
     val glow: Color,
     val colorScheme: ColorScheme,
-    /** Surfaces render as frosted glass over a warm backdrop (see components/Glass.kt). */
-    val glass: Boolean = false,
-    /** Warm color blobs behind the glass on screens without photos, when [glass]. */
+    /** How surfaces are drawn (components/Glass.kt, components/Blueprint.kt). */
+    val style: SurfaceStyle = SurfaceStyle.Flat,
+    /** Color blobs behind glass surfaces on screens without photos. */
     val backdrop: List<Color> = emptyList(),
-)
+) {
+    /** Surfaces are drawn by the theme's helpers (glass or blueprint) rather than as flat fills. */
+    val styled: Boolean get() = style != SurfaceStyle.Flat
+    val glass: Boolean get() = style == SurfaceStyle.Glass
+    val blueprint: Boolean get() = style == SurfaceStyle.Blueprint
+}
+
+enum class SurfaceStyle { Flat, Glass, Blueprint }
 
 /**
  * "Darkroom" design language: an always-dark, near-neutral UI so photos carry all the color,
@@ -193,7 +203,7 @@ private val Album = run {
             inverseOnSurface = page,
             error = Color(0xFFB3261E),
         ),
-        glass = true,
+        style = SurfaceStyle.Glass,
         backdrop = listOf(
             Color(0xE6FFB08A), // peach
             Color(0xB3D9CCF5), // lilac
@@ -204,9 +214,63 @@ private val Album = run {
     )
 }
 
+/**
+ * "청사진" (cyanotype): the photographic blueprint of 1842, and literally a wireframe. Prussian
+ * blue paper with a drafting grid; surfaces are outlined in white, not filled; selections and
+ * primary buttons are solid white with blue text; a sun-burnt orange marks emphasis. Every text
+ * color is 5:1 or better on the paper.
+ */
+private val Blueprint = run {
+    val paper = Color(0xFF123F74)
+    val deep = Color(0xFF0E3563)
+    val white = Color(0xFFF4F8FC)
+    val chalk = Color(0xFFB8CDE6)
+    val sun = Color(0xFFFFB27A)
+    WfPalette(
+        isLight = false,
+        bg = paper, card = deep, well = Color.Transparent, raised = Color(0x1AFFFFFF), line = Color(0x66F4F8FC),
+        text = white, textDim = chalk,
+        accent = white, onAccent = paper, accentInk = sun, accent2 = Color(0xFF8FD3FF), accent3 = sun,
+        print = white, printHole = Color(0xFF2B5A8F),
+        // A phone drawn as a white outline, like the rest of the drawing.
+        deviceBody = Color.Transparent, deviceEdge = white, deviceScreen = Color(0xFF0A2749),
+        glow = Color(0xFF8FD3FF),
+        colorScheme = darkColorScheme(
+            primary = white,
+            onPrimary = paper,
+            primaryContainer = Color(0xFF1D4F8A),
+            onPrimaryContainer = white,
+            secondary = sun,
+            onSecondary = Color(0xFF3A1A06),
+            secondaryContainer = Color(0xFF1D4F8A),
+            onSecondaryContainer = white,
+            tertiary = Color(0xFF8FD3FF),
+            onTertiary = deep,
+            background = paper,
+            onBackground = white,
+            surface = paper,
+            onSurface = white,
+            surfaceVariant = deep,
+            onSurfaceVariant = chalk,
+            surfaceContainerLowest = Color(0xFF0A2749),
+            surfaceContainerLow = deep,
+            surfaceContainer = deep,
+            surfaceContainerHigh = Color(0xFF1A4880),
+            surfaceContainerHighest = Color(0xFF22538F),
+            outline = chalk,
+            outlineVariant = Color(0x55F4F8FC),
+            inverseSurface = white,
+            inverseOnSurface = paper,
+            error = Color(0xFFFFB4AB),
+        ),
+        style = SurfaceStyle.Blueprint,
+    )
+}
+
 fun AppTheme.palette(): WfPalette = when (this) {
     AppTheme.Darkroom -> Darkroom
     AppTheme.Album -> Album
+    AppTheme.Blueprint -> Blueprint
 }
 
 val LocalWfPalette = staticCompositionLocalOf { Darkroom }
@@ -290,6 +354,15 @@ private val DarkroomType = pretendardType(heavy = 800, bold = 700, tight = 1f)
 /** Album: the same Pretendard, one step lighter with half the tightening — calm, not technical. */
 private val AlbumType = pretendardType(heavy = 700, bold = 600, tight = 0.5f)
 
+/**
+ * Blueprint: Pretendard with tabular figures in the small annotations, so sizes like 2448×1848
+ * line up like dimensions on a drawing. (A true monospace spaces Hangul out, so it's avoided.)
+ */
+private val BlueprintType = pretendardType(heavy = 700, bold = 600, tight = 0.4f).run {
+    fun TextStyle.figures() = copy(fontFeatureSettings = "tnum")
+    copy(labelSmall = labelSmall.figures(), labelMedium = labelMedium.figures(), bodySmall = bodySmall.figures())
+}
+
 private val DarkroomShapes = Shapes(
     extraSmall = RoundedCornerShape(8.dp),
     small = RoundedCornerShape(12.dp),
@@ -312,7 +385,11 @@ fun WireframeTheme(theme: AppTheme = AppTheme.Darkroom, content: @Composable () 
     ) {
         MaterialTheme(
             colorScheme = palette.colorScheme,
-            typography = if (theme == AppTheme.Album) AlbumType else DarkroomType,
+            typography = when (theme) {
+                AppTheme.Darkroom -> DarkroomType
+                AppTheme.Album -> AlbumType
+                AppTheme.Blueprint -> BlueprintType
+            },
             shapes = DarkroomShapes,
             content = content,
         )

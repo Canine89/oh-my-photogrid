@@ -98,12 +98,12 @@ fun HomeScreen(
     onCheckUpdates: () -> Unit,
     onPurpose: (Purpose) -> Unit,
 ) {
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     val hazeState = rememberHazeState()
     Box(Modifier.fillMaxSize()) {
     GlassBackdrop(Modifier.matchParentSize().hazeSource(hazeState))
     CompositionLocalProvider(LocalGlassState provides hazeState) {
-    Surface(Modifier.fillMaxSize(), color = if (glass) Color.Transparent else MaterialTheme.colorScheme.background) {
+    Surface(Modifier.fillMaxSize(), color = if (styled) Color.Transparent else MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val wide = maxWidth >= 600.dp && maxWidth > maxHeight
             if (wide) {
@@ -177,12 +177,21 @@ private fun LazyGridScope.purposeItems(onPurpose: (Purpose) -> Unit, previewHeig
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Brand(theme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        BrandMark(Modifier.size(22.dp))
-        Spacer(Modifier.width(10.dp))
-        Text("oh-my-photogrid", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+    // Name and theme switch share a line when they fit; otherwise the switch drops below.
+    FlowRow(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 12.dp)) {
+            BrandMark(Modifier.size(22.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("oh-my-photogrid", style = MaterialTheme.typography.titleSmall, maxLines = 1, softWrap = false)
+        }
+        Spacer(Modifier.weight(1f))
         ThemeSwitch(theme, onThemeChange)
     }
 }
@@ -200,11 +209,12 @@ private fun UpdateBanner(
     onDismiss: (AvailableUpdate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     Surface(
         shape = Wf.CardShape,
-        color = if (glass) Color.Transparent else Wf.Card,
-        border = if (glass) null else BorderStroke(1.dp, Wf.AccentInk.copy(alpha = 0.5f)),
+        color = if (styled) Color.Transparent else Wf.Card,
+        contentColor = Wf.Text,
+        border = if (styled) null else BorderStroke(1.dp, Wf.AccentInk.copy(alpha = 0.5f)),
         modifier = modifier.fillMaxWidth().wfSurface(Wf.Card, Wf.CardShape, 10.dp).testTag("update_banner"),
     ) {
         Row(Modifier.padding(start = 16.dp, end = 6.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -254,7 +264,7 @@ private fun UpdateBanner(
 @Composable
 private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
     val haptics = LocalHapticFeedback.current
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     Row(
         Modifier.background(Wf.Well, Wf.PillShape).padding(3.dp).selectableGroup(),
         verticalAlignment = Alignment.CenterVertically,
@@ -265,7 +275,7 @@ private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
             Box(
                 Modifier
                     .heightIn(min = 40.dp)
-                    .then(if (glass) Modifier.glassChip(selected) else Modifier.clip(Wf.PillShape).background(container))
+                    .then(if (styled) Modifier.glassChip(selected) else Modifier.clip(Wf.PillShape).background(container))
                     .clip(Wf.PillShape)
                     .selectable(selected, role = Role.RadioButton) {
                         if (!selected) {
@@ -296,6 +306,10 @@ private fun Headline(theme: AppTheme) {
                     append("우리 가족 사진,\n어디에 ")
                     withStyle(SpanStyle(color = Wf.AccentInk)) { append("담아 볼까요") }
                     append("?")
+                } else if (theme == AppTheme.Blueprint) {
+                    append("어디에 쓸 콜라주,\n")
+                    withStyle(SpanStyle(color = Wf.AccentInk)) { append("도면부터") }
+                    append(" 그려 볼까요?")
                 } else {
                     append("어디에 쓸\n")
                     withStyle(SpanStyle(color = Wf.AccentInk)) { append("콜라주") }
@@ -321,7 +335,7 @@ private fun StepChips() {
             Row(
                 Modifier
                     .then(
-                        if (LocalWfPalette.current.glass) Modifier.wfSurface(Wf.Card, Wf.PillShape, 4.dp)
+                        if (LocalWfPalette.current.styled) Modifier.wfSurface(Wf.Card, Wf.PillShape, 4.dp)
                         else Modifier.border(1.dp, MaterialTheme.colorScheme.outline, Wf.PillShape),
                     )
                     .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
@@ -357,10 +371,10 @@ private fun Footnote(version: String, onCheckUpdates: () -> Unit) {
         Text(
             "갤러리에서 사진을 공유 → oh-my-photogrid로 보내도 시작돼요.\n4:5, 폴드 8 Ultra 크기는 편집 화면의 '크기'에서 고를 수 있어요.",
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("버전 $version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            Text("버전 $version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = onCheckUpdates, modifier = Modifier.testTag("check_updates")) { Text("업데이트 확인") }
         }
     }

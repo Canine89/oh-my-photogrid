@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.wireframephoto.ui.theme.LocalReducedMotion
 import app.wireframephoto.ui.theme.LocalWfPalette
+import app.wireframephoto.ui.theme.SurfaceStyle
 import app.wireframephoto.ui.theme.Wf
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
@@ -64,13 +65,30 @@ import kotlin.math.sin
 /** Blur source for glass surfaces in this window (set by the screen that draws the backdrop). */
 val LocalGlassState = staticCompositionLocalOf<HazeState?> { null }
 
-/** Glass (Album theme) or flat fill (Darkroom) for a surface of [color] in [shape]. */
+/**
+ * A surface of [color] in [shape], drawn the theme's way: a flat fill (Darkroom), frosted glass
+ * (가족 앨범) or a white outline on blueprint paper (청사진; only accent surfaces are filled, and
+ * raised ones — [depth] 10dp and up — get crop marks).
+ */
 @Composable
 fun Modifier.wfSurface(color: Color, shape: Shape, depth: Dp = 8.dp, tint: Float = 0.5f): Modifier {
     val palette = LocalWfPalette.current
-    if (!palette.glass) return background(color, shape)
-    // Accent glass carries white text, so it stays nearly opaque whatever is behind it.
-    return glass(color, shape, depth, if (color == palette.accent) maxOf(tint, 0.92f) else tint)
+    return when (palette.style) {
+        SurfaceStyle.Flat -> background(color, shape)
+        // Accent glass carries white text, so it stays nearly opaque whatever is behind it.
+        SurfaceStyle.Glass -> glass(color, shape, depth, if (color == palette.accent) maxOf(tint, 0.92f) else tint)
+        // Raised surfaces float over photos and other content, so they are solid sheets of paper
+        // (text on them must never show a photo through); flat ones stay outlines.
+        SurfaceStyle.Blueprint -> blueprint(
+            shape,
+            fill = when {
+                color == palette.accent -> color
+                depth >= 10.dp -> palette.card
+                else -> null
+            },
+            marks = depth >= 10.dp,
+        )
+    }
 }
 
 /**
@@ -132,15 +150,19 @@ private fun Modifier.glassRim(shape: Shape): Modifier = drawWithCache {
  */
 @Composable
 fun Modifier.glassButton(color: Color, enabled: Boolean = true): Modifier {
-    if (!LocalWfPalette.current.glass) return this
-    return glass(if (enabled) color else color.copy(alpha = 0.35f), Wf.PillShape, if (enabled) 6.dp else 0.dp, tint = 0.92f)
+    val body = if (enabled) color else color.copy(alpha = 0.35f)
+    return when (LocalWfPalette.current.style) {
+        SurfaceStyle.Flat -> this
+        SurfaceStyle.Glass -> glass(body, Wf.PillShape, if (enabled) 6.dp else 0.dp, tint = 0.92f)
+        SurfaceStyle.Blueprint -> blueprint(Wf.PillShape, fill = body)
+    }
 }
 
 @Composable
 fun glassButtonColors(
     container: Color = MaterialTheme.colorScheme.primary,
     content: Color = MaterialTheme.colorScheme.onPrimary,
-): ButtonColors = if (LocalWfPalette.current.glass) {
+): ButtonColors = if (LocalWfPalette.current.styled) {
     ButtonDefaults.buttonColors(
         containerColor = Color.Transparent,
         contentColor = content,
@@ -154,10 +176,14 @@ fun glassButtonColors(
 /** Selection pill (chips, tabs): accent glass when selected in Album, [idle] glass otherwise. */
 @Composable
 fun Modifier.glassChip(selected: Boolean, shape: Shape = Wf.PillShape, idle: Color = Wf.Raised): Modifier {
-    if (!LocalWfPalette.current.glass) return this
+    val style = LocalWfPalette.current.style
     return when {
+        style == SurfaceStyle.Flat -> this
+        selected && style == SurfaceStyle.Blueprint -> blueprint(shape, fill = Wf.Accent)
         selected -> glass(Wf.Accent, shape, 4.dp, tint = 0.92f)
         idle.alpha == 0f -> this
+        // Blueprint: options not yet picked are dashed, like a draft.
+        style == SurfaceStyle.Blueprint -> blueprint(shape, dashed = true)
         else -> glass(idle, shape, 0.dp, tint = 0.4f)
     }
 }
@@ -165,7 +191,7 @@ fun Modifier.glassChip(selected: Boolean, shape: Shape = Wf.PillShape, idle: Col
 /** Rises and fades in, staggered by [index] (home cards settle onto the page). Album only. */
 @Composable
 fun Modifier.glassEnter(index: Int): Modifier {
-    if (!LocalWfPalette.current.glass || LocalReducedMotion.current) return this
+    if (!LocalWfPalette.current.styled || LocalReducedMotion.current) return this
     val t = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(60L * index)
@@ -184,6 +210,7 @@ fun Modifier.glassEnter(index: Int): Modifier {
 @Composable
 fun GlassBackdrop(modifier: Modifier = Modifier, photos: List<ImageBitmap> = emptyList()) {
     val palette = LocalWfPalette.current
+    if (palette.blueprint) return BlueprintPaper(modifier)
     if (!palette.glass) return
     val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     // Read only while drawing, so the drift redraws without recomposing anything.

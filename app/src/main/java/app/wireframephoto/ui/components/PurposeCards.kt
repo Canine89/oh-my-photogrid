@@ -30,6 +30,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -58,7 +59,10 @@ fun PurposePreview(purpose: Purpose, modifier: Modifier = Modifier) {
     val screenColor = Wf.Raised
     val glyphColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
     val outline = MaterialTheme.colorScheme.outline
+    val drawn = LocalWfPalette.current.blueprint
     Canvas(modifier) {
+        // Blueprint: the same phone and frame, drawn in line only.
+        if (drawn) return@Canvas drawPreviewOutline(purpose, aspect, BlueprintInk)
         val bezel = if (purpose.deviceFrame) 3.dp.toPx() else 0f
         val fit = CollageGeometry.fit(aspect, size.width - 2 * bezel, size.height - 2 * bezel)
         val left = fit.left + bezel
@@ -95,16 +99,33 @@ fun PurposePreview(purpose: Purpose, modifier: Modifier = Modifier) {
     }
 }
 
+private val BlueprintInk = Color(0xD9F4F8FC)
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawPreviewOutline(purpose: Purpose, aspect: Float, ink: Color) {
+    val bezel = if (purpose.deviceFrame) 3.dp.toPx() else 0f
+    val fit = CollageGeometry.fit(aspect, size.width - 2 * bezel, size.height - 2 * bezel)
+    val left = fit.left + bezel
+    val top = fit.top + bezel
+    val stroke = Stroke(1.5.dp.toPx())
+    if (purpose.deviceFrame) {
+        drawRoundRect(ink, Offset(left - bezel, top - bezel), Size(fit.width + 2 * bezel, fit.height + 2 * bezel), CornerRadius(6.dp.toPx()), style = stroke)
+        drawCircle(ink, 2.dp.toPx(), Offset(left + fit.width / 2f, top + 5.dp.toPx()))
+    }
+    drawRoundRect(ink.copy(alpha = 0.5f), Offset(left, top), Size(fit.width, fit.height), CornerRadius(4.dp.toPx()), style = stroke)
+    drawWireScene(androidx.compose.ui.geometry.Rect(left + fit.width * 0.2f, top + fit.height * 0.3f, left + fit.width * 0.8f, top + fit.height * 0.7f), ink)
+}
+
 /** Large card used on the home screen: "where will you use it?" Squishes when pressed. */
 @Composable
 fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     Surface(
         onClick = onClick,
         shape = Wf.CardShape,
-        color = if (glass) Color.Transparent else Wf.Card,
-        border = if (glass) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (styled) Color.Transparent else Wf.Card,
+        contentColor = Wf.Text,
+        border = if (styled) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         interactionSource = interaction,
         modifier = modifier.pressScale(interaction).wfSurface(Wf.Card, Wf.CardShape, 12.dp).testTag("purpose_${purpose.presetId}"),
     ) {
@@ -130,7 +151,7 @@ fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifi
                 Text(
                     "${purpose.preset.width}×${purpose.preset.height}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -142,16 +163,17 @@ fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifi
 fun PurposeRow(purpose: Purpose, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val primary = MaterialTheme.colorScheme.primary
     val interaction = remember { MutableInteractionSource() }
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     val shape = RoundedCornerShape(20.dp)
     Surface(
         onClick = onClick,
         shape = shape,
-        color = if (glass) Color.Transparent else if (selected) Wf.Raised else Wf.Well,
+        color = if (styled) Color.Transparent else if (selected) Wf.Raised else Wf.Well,
+        contentColor = Wf.Text,
         border = if (selected) BorderStroke(2.dp, primary) else null,
         interactionSource = interaction,
         modifier = modifier.pressScale(interaction)
-            .then(if (glass) Modifier.wfSurface(if (selected) Wf.Raised else Wf.Well, shape, if (selected) 8.dp else 2.dp) else Modifier)
+            .then(if (styled) Modifier.wfSurface(if (selected) Wf.Raised else Wf.Well, shape, if (selected) 8.dp else 2.dp) else Modifier)
             .testTag("preset_${purpose.presetId}").semantics { this.selected = selected },
     ) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -176,13 +198,16 @@ fun PurposeRow(purpose: Purpose, selected: Boolean, onClick: () -> Unit, modifie
 @Composable
 fun BrandMark(modifier: Modifier = Modifier) {
     val (a, b, c) = listOf(Wf.Accent, Wf.Accent2, Wf.Accent3)
+    val outlined = LocalWfPalette.current.blueprint
     Canvas(modifier) {
         val g = size.minDimension * 0.08f
         val r = CornerRadius(size.minDimension * 0.14f)
         val w = size.width
         val h = size.height
-        drawRoundRect(a, Offset(0f, 0f), Size(w * 0.58f - g / 2, h), r)
-        drawRoundRect(b, Offset(w * 0.58f + g / 2, 0f), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
-        drawRoundRect(c, Offset(w * 0.58f + g / 2, h / 2 + g / 2), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
+        // Blueprint: the mark is drawn, not filled — a literal wireframe.
+        val style = if (outlined) Stroke(1.5.dp.toPx()) else Fill
+        drawRoundRect(a, Offset(0f, 0f), Size(w * 0.58f - g / 2, h), r, style = style)
+        drawRoundRect(b, Offset(w * 0.58f + g / 2, 0f), Size(w * 0.42f - g / 2, h / 2 - g / 2), r, style = style)
+        drawRoundRect(c, Offset(w * 0.58f + g / 2, h / 2 + g / 2), Size(w * 0.42f - g / 2, h / 2 - g / 2), r, style = style)
     }
 }

@@ -20,8 +20,8 @@ android {
         applicationId = "app.wireframephoto"
         minSdk = 29
         targetSdk = 37
-        versionCode = 9
-        versionName = "1.6.2"
+        versionCode = 10
+        versionName = "1.7.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

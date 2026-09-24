@@ -71,7 +71,7 @@ import app.wireframephoto.core.PxRect
 import app.wireframephoto.core.Templates
 import app.wireframephoto.render.BitmapLoader
 import app.wireframephoto.ui.components.animateCells
-import app.wireframephoto.ui.components.glass
+import app.wireframephoto.ui.components.wfSurface
 import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
 import kotlin.math.min
@@ -140,7 +140,7 @@ fun CollageCanvas(
     var positionInRoot by remember { mutableStateOf(Offset.Zero) }
 
     BoxWithConstraints(modifier) {
-        val glass = LocalWfPalette.current.glass
+        val styled = LocalWfPalette.current.styled
         val bezelDp = 7.dp
         val bezel = if (deviceFrame) with(density) { bezelDp.toPx() } else 0f
         val screenRadius = 14.dp
@@ -202,7 +202,7 @@ fun CollageCanvas(
                     .offset { IntOffset((frame.left - bezel).roundToInt(), (frame.top - bezel).roundToInt()) }
                     .size(with(density) { (canvasW + 2 * bezel).toDp() }, with(density) { (canvasH + 2 * bezel).toDp() })
                     .then(
-                        if (glass) Modifier.glass(Wf.DeviceBody, RoundedCornerShape(screenRadius + bezelDp), 14.dp)
+                        if (styled) Modifier.wfSurface(Wf.DeviceBody, RoundedCornerShape(screenRadius + bezelDp), 14.dp)
                         else Modifier
                             .background(Wf.DeviceBody, RoundedCornerShape(screenRadius + bezelDp))
                             .border(1.dp, Wf.DeviceEdge, RoundedCornerShape(screenRadius + bezelDp)),

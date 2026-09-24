@@ -131,7 +131,13 @@ private fun FullScreen(onDismiss: () -> Unit, content: @Composable () -> Unit) {
 private fun Developing(progress: Float, onCancel: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
         MorphingLoader(Modifier.size(96.dp))
-        Text(if (LocalAppTheme.current == AppTheme.Album) "앨범에 담는 중…" else "현상하는 중…", style = MaterialTheme.typography.headlineSmall)
+        val developing = when (LocalAppTheme.current) {
+            AppTheme.Darkroom -> "현상하는 중…"
+            AppTheme.Album -> "앨범에 담는 중…"
+            // Cyanotypes were "printed" by the sun: 청사진을 뜨다.
+            AppTheme.Blueprint -> "청사진 뜨는 중…"
+        }
+        Text(developing, style = MaterialTheme.typography.headlineSmall)
         Text(
             "${(progress * 100).toInt()}%",
             style = MaterialTheme.typography.titleMedium,
@@ -228,7 +234,7 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
                         }
                     },
                     shape = Wf.PillShape,
-                    colors = if (LocalWfPalette.current.glass) glassButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
+                    colors = if (LocalWfPalette.current.styled) glassButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
                     modifier = Modifier.weight(1f).height(52.dp).glassButton(Wf.Accent),
                 ) {
                     Icon(Icons.Outlined.Wallpaper, contentDescription = null, Modifier.size(18.dp))
@@ -242,7 +248,7 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
             Text(
                 "설정 화면에서 커버 화면(접었을 때) 또는 홈·잠금 화면을 고르면 돼요.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Spacer(Modifier.height(4.dp))

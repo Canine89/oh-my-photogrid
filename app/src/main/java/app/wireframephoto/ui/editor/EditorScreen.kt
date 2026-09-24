@@ -207,18 +207,19 @@ fun EditorScreen(viewModel: EditorViewModel) {
         )
     }
 
-    val glass = LocalWfPalette.current.glass
-    // Glass theme: the collage's own photos, blurred into light, are the page behind the glass.
+    val styled = LocalWfPalette.current.styled
+    // Glass theme: the collage's own photos, blurred into light, are the page behind the styled.
     val hazeState = rememberHazeState()
     val backdropUris = state.slots.take(state.template.count).mapNotNull { it.uri }.take(4)
-    val backdropPhotos by produceState(emptyList<ImageBitmap>(), backdropUris, glass) {
-        if (glass) value = backdropUris.mapNotNull { viewModel.loader.loadPreview(it)?.asImageBitmap() }
+    val backdropPhotos by produceState(emptyList<ImageBitmap>(), backdropUris, styled) {
+        if (styled) value = backdropUris.mapNotNull { viewModel.loader.loadPreview(it)?.asImageBitmap() }
     }
     Box(Modifier.fillMaxSize()) {
     GlassBackdrop(Modifier.matchParentSize().hazeSource(hazeState), backdropPhotos)
     CompositionLocalProvider(LocalGlassState provides hazeState) {
     Scaffold(
-        containerColor = if (glass) Color.Transparent else MaterialTheme.colorScheme.background,
+        containerColor = if (styled) Color.Transparent else MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -408,13 +409,14 @@ private fun sidePanelWidth(total: Dp): Dp = (total * 0.38f).coerceIn(340.dp, 460
 /** Folded screen: the open tool as a floating rounded sheet above the toolbar. */
 @Composable
 private fun CompactToolSheet(tool: Tool, onClose: () -> Unit, modifier: Modifier, content: @Composable () -> Unit) {
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     Surface(
-        modifier.then(if (glass) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 18.dp) else Modifier.shadow(20.dp, Wf.SheetShape))
+        modifier.then(if (styled) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 18.dp) else Modifier.shadow(20.dp, Wf.SheetShape))
             .testTag("panel_${tool.name}"),
         shape = Wf.SheetShape,
-        color = if (glass) Color.Transparent else Wf.Card,
-        border = if (glass) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (styled) Color.Transparent else Wf.Card,
+        contentColor = Wf.Text,
+        border = if (styled) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 18.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -478,7 +480,7 @@ private fun CanvasArea(
     val bottomBar = cell != null || floatingShuffle
     Box(modifier) {
         // Glass theme: the blurred photos behind already carry their color.
-        if (!LocalWfPalette.current.glass) AmbientGlow(state, viewModel.loader, Modifier.fillMaxSize())
+        if (!LocalWfPalette.current.styled) AmbientGlow(state, viewModel.loader, Modifier.fillMaxSize())
         val glassState = LocalGlassState.current
         CollageCanvas(
             state = state,
@@ -526,13 +528,14 @@ private fun CellActionBar(
     onClear: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     Surface(
-        modifier = Modifier.then(if (glass) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(16.dp, Wf.PillShape))
+        modifier = Modifier.then(if (styled) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(16.dp, Wf.PillShape))
             .testTag("cell_actions"),
         shape = Wf.PillShape,
-        color = if (glass) Color.Transparent else Wf.Raised,
-        border = if (glass) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
+        color = if (styled) Color.Transparent else Wf.Raised,
+        contentColor = Wf.Text,
+        border = if (styled) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
     ) {
         Row(Modifier.padding(start = 8.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(28.dp).wfSurface(Wf.Accent, CircleShape, 3.dp), contentAlignment = Alignment.Center) {
@@ -563,14 +566,15 @@ private fun CellActionBar(
 /** First-run (and "?" button) explanation of the gestures, which are otherwise invisible. */
 @Composable
 private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
-    val glass = LocalWfPalette.current.glass
+    val styled = LocalWfPalette.current.styled
     Surface(
         Modifier.widthIn(max = 440.dp)
-            .then(if (glass) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 20.dp) else Modifier.shadow(24.dp, Wf.SheetShape))
+            .then(if (styled) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 20.dp) else Modifier.shadow(24.dp, Wf.SheetShape))
             .testTag("guide"),
         shape = Wf.SheetShape,
-        color = if (glass) Color.Transparent else Wf.Card,
-        border = if (glass) null else BorderStroke(1.dp, Wf.Line),
+        color = if (styled) Color.Transparent else Wf.Card,
+        contentColor = Wf.Text,
+        border = if (styled) null else BorderStroke(1.dp, Wf.Line),
     ) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(22.dp),

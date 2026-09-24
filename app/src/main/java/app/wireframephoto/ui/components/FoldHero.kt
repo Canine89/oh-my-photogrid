@@ -75,7 +75,7 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
     val body = Wf.DeviceBody
     val edge = Wf.DeviceEdge
     val screenColor = Wf.DeviceScreen
-    val glass = LocalWfPalette.current.glass
+    val palette = LocalWfPalette.current
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Canvas(Modifier.fillMaxWidth().height(height)) {
             drawRect(glow, size = size)
@@ -90,12 +90,12 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
             val caseCorner = CornerRadius(18.dp.toPx())
             drawRoundRect(body, caseTopLeft, caseSize, caseCorner)
             // Album: a frosted glass phone, its rim catching the light at the top.
-            val rim = if (glass) {
+            val rim = if (palette.glass) {
                 Brush.verticalGradient(listOf(edge, edge.copy(alpha = 0.3f)), caseTopLeft.y, caseTopLeft.y + caseSize.height)
             } else {
                 SolidColor(edge)
             }
-            drawRoundRect(rim, caseTopLeft, caseSize, caseCorner, style = Stroke((if (glass) 1.5.dp else 1.dp).toPx()))
+            drawRoundRect(rim, caseTopLeft, caseSize, caseCorner, style = Stroke((if (palette.styled) 1.5.dp else 1.dp).toPx()))
             drawRoundRect(screenColor, Offset(screen.left, screen.top), Size(screen.width, screen.height), CornerRadius(12.dp.toPx()))
             val gap = 3.dp.toPx()
             val px = CollageGeometry.cellRects(
@@ -104,7 +104,9 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
             )
             px.forEachIndexed { i, r ->
                 if (r.width > 2f && r.height > 2f) {
-                    drawScene(Rect(screen.left + r.left, screen.top + r.top, screen.left + r.right, screen.top + r.bottom), Scenes[i % Scenes.size])
+                    val cell = Rect(screen.left + r.left, screen.top + r.top, screen.left + r.right, screen.top + r.bottom)
+                    // Blueprint: the photos themselves are drawn as wireframes.
+                    if (palette.blueprint) drawWireScene(cell) else drawScene(cell, Scenes[i % Scenes.size])
                 }
             }
             drawCircle(Color.Black, 3.dp.toPx(), Offset(screen.center.x, screen.top + 8.dp.toPx()))

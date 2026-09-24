@@ -102,6 +102,11 @@ import app.wireframephoto.ui.EditorViewModel
 import app.wireframephoto.ui.ImagesOnly
 import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.persistReadAccess
+import app.wireframephoto.ui.components.JellyBackdrop
+import app.wireframephoto.ui.components.jellyButton
+import app.wireframephoto.ui.components.jellyButtonColors
+import app.wireframephoto.ui.components.wfSurface
+import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
 
 /** Which arrangement the editor uses for the current window. Exposed for tests and screenshots. */
@@ -196,9 +201,11 @@ fun EditorScreen(viewModel: EditorViewModel) {
         )
     }
 
+    val jelly = LocalWfPalette.current.jelly
     Box(Modifier.fillMaxSize()) {
+    JellyBackdrop(Modifier.matchParentSize())
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = if (jelly) Color.Transparent else MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -232,7 +239,9 @@ fun EditorScreen(viewModel: EditorViewModel) {
                         onClick = { showExportOptions = true },
                         enabled = state.photoCount > 0,
                         shape = Wf.PillShape,
-                        modifier = Modifier.padding(start = 4.dp, end = 10.dp).testTag("save"),
+                        colors = jellyButtonColors(),
+                        modifier = Modifier.padding(start = 4.dp, end = 10.dp)
+                            .jellyButton(MaterialTheme.colorScheme.primary, enabled = state.photoCount > 0).testTag("save"),
                     ) { Text("저장", fontWeight = FontWeight.ExtraBold) }
                 },
             )
@@ -385,11 +394,13 @@ private fun sidePanelWidth(total: Dp): Dp = (total * 0.38f).coerceIn(340.dp, 460
 /** Folded screen: the open tool as a floating rounded sheet above the toolbar. */
 @Composable
 private fun CompactToolSheet(tool: Tool, onClose: () -> Unit, modifier: Modifier, content: @Composable () -> Unit) {
+    val jelly = LocalWfPalette.current.jelly
     Surface(
-        modifier.shadow(20.dp, Wf.SheetShape).testTag("panel_${tool.name}"),
+        modifier.then(if (jelly) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 18.dp) else Modifier.shadow(20.dp, Wf.SheetShape))
+            .testTag("panel_${tool.name}"),
         shape = Wf.SheetShape,
-        color = Wf.Card,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = if (jelly) Color.Transparent else Wf.Card,
+        border = if (jelly) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 18.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -497,14 +508,16 @@ private fun CellActionBar(
     onClear: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val jelly = LocalWfPalette.current.jelly
     Surface(
-        modifier = Modifier.shadow(16.dp, Wf.PillShape).testTag("cell_actions"),
+        modifier = Modifier.then(if (jelly) Modifier.wfSurface(Wf.Raised, Wf.PillShape, 14.dp) else Modifier.shadow(16.dp, Wf.PillShape))
+            .testTag("cell_actions"),
         shape = Wf.PillShape,
-        color = Wf.Raised,
-        border = BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
+        color = if (jelly) Color.Transparent else Wf.Raised,
+        border = if (jelly) null else BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
     ) {
         Row(Modifier.padding(start = 8.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(28.dp).background(Wf.Accent, CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(28.dp).wfSurface(Wf.Accent, CircleShape, 3.dp), contentAlignment = Alignment.Center) {
                 Text("$number", style = MaterialTheme.typography.labelLarge, color = Wf.OnAccent)
             }
             TextButton(onClick = onReplace) {
@@ -532,11 +545,14 @@ private fun CellActionBar(
 /** First-run (and "?" button) explanation of the gestures, which are otherwise invisible. */
 @Composable
 private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
+    val jelly = LocalWfPalette.current.jelly
     Surface(
-        Modifier.widthIn(max = 440.dp).shadow(24.dp, Wf.SheetShape).testTag("guide"),
+        Modifier.widthIn(max = 440.dp)
+            .then(if (jelly) Modifier.wfSurface(Wf.Card, Wf.SheetShape, 20.dp) else Modifier.shadow(24.dp, Wf.SheetShape))
+            .testTag("guide"),
         shape = Wf.SheetShape,
-        color = Wf.Card,
-        border = BorderStroke(1.dp, Wf.Line),
+        color = if (jelly) Color.Transparent else Wf.Card,
+        border = if (jelly) null else BorderStroke(1.dp, Wf.Line),
     ) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(22.dp),
@@ -550,7 +566,8 @@ private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
             Button(
                 onClick = onDismiss,
                 shape = Wf.PillShape,
-                modifier = Modifier.align(Alignment.End).testTag("guide_ok"),
+                colors = jellyButtonColors(),
+                modifier = Modifier.align(Alignment.End).jellyButton(MaterialTheme.colorScheme.primary).testTag("guide_ok"),
             ) { Text("알겠어요", fontWeight = FontWeight.Bold) }
         }
     }
@@ -560,7 +577,7 @@ private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
 private fun GuideRow(icon: ImageVector, text: String) {
     Row(verticalAlignment = Alignment.Top) {
         Box(Modifier.size(34.dp).background(Wf.Well, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = Wf.Accent, modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, tint = Wf.AccentInk, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(12.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))

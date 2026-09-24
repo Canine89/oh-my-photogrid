@@ -36,6 +36,7 @@ import app.wireframephoto.core.AspectPresets
 import app.wireframephoto.core.CollageGeometry
 import app.wireframephoto.core.Templates
 import app.wireframephoto.ui.theme.LocalReducedMotion
+import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
 import kotlinx.coroutines.delay
 
@@ -73,28 +74,26 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
     val body = Wf.DeviceBody
     val edge = Wf.DeviceEdge
     val screenColor = Wf.DeviceScreen
+    val jelly = LocalWfPalette.current.jelly
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Canvas(Modifier.fillMaxWidth().height(height)) {
             drawRect(glow, size = size)
-            val bezel = 6.dp.toPx()
+            // Album: a chunky silicone jelly case around the phone.
+            val bezel = (if (jelly) 11.dp else 6.dp).toPx()
             val box = CollageGeometry.fit(aspect, size.width * 0.9f, size.height * 0.92f)
             val screen = Rect(
                 (size.width - box.width) / 2f + bezel, (size.height - box.height) / 2f + bezel,
                 (size.width + box.width) / 2f - bezel, (size.height + box.height) / 2f - bezel,
             )
-            drawRoundRect(
-                body,
-                topLeft = Offset(screen.left - bezel, screen.top - bezel),
-                size = Size(screen.width + 2 * bezel, screen.height + 2 * bezel),
-                cornerRadius = CornerRadius(18.dp.toPx()),
-            )
-            drawRoundRect(
-                edge,
-                topLeft = Offset(screen.left - bezel, screen.top - bezel),
-                size = Size(screen.width + 2 * bezel, screen.height + 2 * bezel),
-                cornerRadius = CornerRadius(18.dp.toPx()),
-                style = Stroke(1.dp.toPx()),
-            )
+            val caseTopLeft = Offset(screen.left - bezel, screen.top - bezel)
+            val caseSize = Size(screen.width + 2 * bezel, screen.height + 2 * bezel)
+            val caseCorner = CornerRadius((if (jelly) 24.dp else 18.dp).toPx())
+            if (jelly) {
+                drawJellyRoundRect(body, caseTopLeft, caseSize, caseCorner)
+            } else {
+                drawRoundRect(body, caseTopLeft, caseSize, caseCorner)
+            }
+            if (!jelly) drawRoundRect(edge, caseTopLeft, caseSize, caseCorner, style = Stroke(1.dp.toPx()))
             drawRoundRect(screenColor, Offset(screen.left, screen.top), Size(screen.width, screen.height), CornerRadius(12.dp.toPx()))
             val gap = 3.dp.toPx()
             val px = CollageGeometry.cellRects(

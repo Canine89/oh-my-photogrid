@@ -26,7 +26,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.selection.selectable
@@ -36,7 +36,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -63,8 +63,15 @@ import app.wireframephoto.ui.Purpose
 import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.components.BrandMark
 import app.wireframephoto.ui.components.FoldHero
+import app.wireframephoto.ui.components.JellyBackdrop
 import app.wireframephoto.ui.components.PurposeCard
+import app.wireframephoto.ui.components.jellyButton
+import app.wireframephoto.ui.components.jellyButtonColors
+import app.wireframephoto.ui.components.jellyChip
+import app.wireframephoto.ui.components.jellyEnter
+import app.wireframephoto.ui.components.wfSurface
 import app.wireframephoto.ui.theme.AppTheme
+import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
 
 private val Steps = listOf("쓸 곳 고르기", "사진 고르기", "배치 고르고 저장")
@@ -84,7 +91,10 @@ fun HomeScreen(
     onDismissUpdate: (AvailableUpdate) -> Unit,
     onPurpose: (Purpose) -> Unit,
 ) {
-    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    val jelly = LocalWfPalette.current.jelly
+    Box(Modifier.fillMaxSize()) {
+    JellyBackdrop(Modifier.matchParentSize())
+    Surface(Modifier.fillMaxSize(), color = if (jelly) Color.Transparent else MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val wide = maxWidth >= 600.dp && maxWidth > maxHeight
             if (wide) {
@@ -141,15 +151,20 @@ fun HomeScreen(
             }
         }
     }
+    }
 }
 
 private fun LazyGridScope.purposeItems(onPurpose: (Purpose) -> Unit, previewHeight: Dp) {
     val fold = Purposes.featured.filter { it.deviceFrame }
     val social = Purposes.featured.filterNot { it.deviceFrame }
     item(span = { GridItemSpan(maxLineSpan) }) { SectionLabel("갤럭시 Z 폴드 8 배경화면") }
-    items(fold, key = { it.presetId }) { PurposeCard(it, { onPurpose(it) }, previewHeight) }
+    itemsIndexed(fold, key = { _, p -> p.presetId }) { i, p ->
+        PurposeCard(p, { onPurpose(p) }, previewHeight, Modifier.jellyEnter(i))
+    }
     item(span = { GridItemSpan(maxLineSpan) }) { SectionLabel("SNS · 공유용") }
-    items(social, key = { it.presetId }) { PurposeCard(it, { onPurpose(it) }, previewHeight) }
+    itemsIndexed(social, key = { _, p -> p.presetId }) { i, p ->
+        PurposeCard(p, { onPurpose(p) }, previewHeight, Modifier.jellyEnter(fold.size + i))
+    }
 }
 
 @Composable
@@ -175,14 +190,15 @@ private fun UpdateBanner(
     onDismiss: (AvailableUpdate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val jelly = LocalWfPalette.current.jelly
     Surface(
         shape = Wf.CardShape,
-        color = Wf.Card,
-        border = BorderStroke(1.dp, Wf.Accent.copy(alpha = 0.5f)),
-        modifier = modifier.fillMaxWidth().testTag("update_banner"),
+        color = if (jelly) Color.Transparent else Wf.Card,
+        border = if (jelly) null else BorderStroke(1.dp, Wf.AccentInk.copy(alpha = 0.5f)),
+        modifier = modifier.fillMaxWidth().wfSurface(Wf.Card, Wf.CardShape, 10.dp).testTag("update_banner"),
     ) {
         Row(Modifier.padding(start = 16.dp, end = 6.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(36.dp).background(Wf.Accent, CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(36.dp).wfSurface(Wf.Accent, CircleShape, 3.dp), contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.SystemUpdate, contentDescription = null, tint = Wf.OnAccent, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(12.dp))
@@ -201,7 +217,7 @@ private fun UpdateBanner(
                 if (phase is UpdatePhase.Downloading) {
                     LinearProgressIndicator(
                         progress = { phase.progress },
-                        color = Wf.Accent,
+                        color = Wf.AccentInk,
                         trackColor = Wf.Well,
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                     )
@@ -213,9 +229,9 @@ private fun UpdateBanner(
                 onClick = { if (phase == UpdatePhase.Failed) onOpenReleasePage(update) else onUpdate(update) },
                 enabled = !busy,
                 shape = Wf.PillShape,
-                colors = ButtonDefaults.buttonColors(containerColor = Wf.Accent, contentColor = Wf.OnAccent),
+                colors = jellyButtonColors(Wf.Accent, Wf.OnAccent),
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier.testTag("update_get"),
+                modifier = Modifier.jellyButton(Wf.Accent, enabled = !busy).testTag("update_get"),
             ) { Text(if (phase == UpdatePhase.Failed) "페이지 열기" else "업데이트") }
             IconButton(onClick = { onDismiss(update) }, enabled = !busy, modifier = Modifier.testTag("update_later")) {
                 Icon(Icons.Outlined.Close, contentDescription = "나중에", tint = Wf.TextDim)
@@ -228,6 +244,7 @@ private fun UpdateBanner(
 @Composable
 private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
     val haptics = LocalHapticFeedback.current
+    val jelly = LocalWfPalette.current.jelly
     Row(
         Modifier.background(Wf.Well, Wf.PillShape).padding(3.dp).selectableGroup(),
         verticalAlignment = Alignment.CenterVertically,
@@ -238,8 +255,8 @@ private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
             Box(
                 Modifier
                     .heightIn(min = 40.dp)
+                    .then(if (jelly) Modifier.jellyChip(selected) else Modifier.clip(Wf.PillShape).background(container))
                     .clip(Wf.PillShape)
-                    .background(container)
                     .selectable(selected, role = Role.RadioButton) {
                         if (!selected) {
                             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
@@ -267,11 +284,11 @@ private fun Headline(theme: AppTheme) {
             buildAnnotatedString {
                 if (theme == AppTheme.Album) {
                     append("우리 가족 사진,\n어디에 ")
-                    withStyle(SpanStyle(color = Wf.Accent)) { append("담아 볼까요") }
+                    withStyle(SpanStyle(color = Wf.AccentInk)) { append("담아 볼까요") }
                     append("?")
                 } else {
                     append("어디에 쓸\n")
-                    withStyle(SpanStyle(color = Wf.Accent)) { append("콜라주") }
+                    withStyle(SpanStyle(color = Wf.AccentInk)) { append("콜라주") }
                     append("인가요?")
                 }
             },
@@ -293,11 +310,14 @@ private fun StepChips() {
         Steps.forEachIndexed { i, s ->
             Row(
                 Modifier
-                    .border(1.dp, MaterialTheme.colorScheme.outline, Wf.PillShape)
+                    .then(
+                        if (LocalWfPalette.current.jelly) Modifier.wfSurface(Wf.Card, Wf.PillShape, 4.dp)
+                        else Modifier.border(1.dp, MaterialTheme.colorScheme.outline, Wf.PillShape),
+                    )
                     .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(Modifier.size(20.dp).background(if (i == 0) Wf.Accent else Wf.Raised, Wf.PillShape), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(20.dp).wfSurface(if (i == 0) Wf.Accent else Wf.Raised, Wf.PillShape, 2.dp), contentAlignment = Alignment.Center) {
                     Text(
                         "${i + 1}",
                         style = MaterialTheme.typography.labelSmall,

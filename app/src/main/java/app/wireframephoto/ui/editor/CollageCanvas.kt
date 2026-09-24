@@ -71,6 +71,8 @@ import app.wireframephoto.core.PxRect
 import app.wireframephoto.core.Templates
 import app.wireframephoto.render.BitmapLoader
 import app.wireframephoto.ui.components.animateCells
+import app.wireframephoto.ui.components.jelly
+import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.Wf
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -138,7 +140,10 @@ fun CollageCanvas(
     var positionInRoot by remember { mutableStateOf(Offset.Zero) }
 
     BoxWithConstraints(modifier) {
-        val bezel = if (deviceFrame) with(density) { 7.dp.toPx() } else 0f
+        val jelly = LocalWfPalette.current.jelly
+        // Album: the phone wears a chunky silicone jelly case.
+        val bezelDp = if (jelly) 12.dp else 7.dp
+        val bezel = if (deviceFrame) with(density) { bezelDp.toPx() } else 0f
         val screenRadius = 14.dp
         val frame = CollageGeometry.fit(
             state.preset.aspect,
@@ -197,8 +202,12 @@ fun CollageCanvas(
                 Modifier
                     .offset { IntOffset((frame.left - bezel).roundToInt(), (frame.top - bezel).roundToInt()) }
                     .size(with(density) { (canvasW + 2 * bezel).toDp() }, with(density) { (canvasH + 2 * bezel).toDp() })
-                    .background(Wf.DeviceBody, RoundedCornerShape(screenRadius + 7.dp))
-                    .border(1.dp, Wf.DeviceEdge, RoundedCornerShape(screenRadius + 7.dp)),
+                    .then(
+                        if (jelly) Modifier.jelly(Wf.DeviceBody, RoundedCornerShape(screenRadius + bezelDp), 14.dp)
+                        else Modifier
+                            .background(Wf.DeviceBody, RoundedCornerShape(screenRadius + bezelDp))
+                            .border(1.dp, Wf.DeviceEdge, RoundedCornerShape(screenRadius + bezelDp)),
+                    ),
             )
         }
         Canvas(

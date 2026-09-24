@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -70,6 +71,8 @@ import app.wireframephoto.data.ImageSaver
 import app.wireframephoto.render.BitmapLoader
 import app.wireframephoto.ui.ExportStatus
 import app.wireframephoto.ui.components.MorphingLoader
+import app.wireframephoto.ui.components.jellyButton
+import app.wireframephoto.ui.components.jellyButtonColors
 import app.wireframephoto.ui.theme.AppTheme
 import app.wireframephoto.ui.theme.LocalAppTheme
 import app.wireframephoto.ui.theme.LocalWfPalette
@@ -132,7 +135,7 @@ private fun Developing(progress: Float, onCancel: () -> Unit) {
         Text(
             "${(progress * 100).toInt()}%",
             style = MaterialTheme.typography.titleMedium,
-            color = Wf.Accent,
+            color = Wf.AccentInk,
         )
         TextButton(onClick = onCancel) { Text("취소") }
     }
@@ -164,7 +167,7 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("완성!", style = MaterialTheme.typography.displaySmall, color = Wf.Accent)
+        Text("완성!", style = MaterialTheme.typography.displaySmall, color = Wf.AccentInk)
         Spacer(Modifier.height(4.dp))
         Text(
             "갤러리의 ${ImageSaver.ALBUM} 앨범에 ${status.width}×${status.height}로 저장했어요",
@@ -208,7 +211,8 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
             Button(
                 onClick = { context.startActivity(ImageSaver.shareIntent(status.uri, status.mimeType)) },
                 shape = Wf.PillShape,
-                modifier = Modifier.weight(1f).height(52.dp),
+                colors = jellyButtonColors(),
+                modifier = Modifier.weight(1f).height(52.dp).jellyButton(MaterialTheme.colorScheme.primary),
             ) {
                 Icon(Icons.Outlined.Share, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -224,7 +228,8 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
                         }
                     },
                     shape = Wf.PillShape,
-                    modifier = Modifier.weight(1f).height(52.dp),
+                    colors = if (LocalWfPalette.current.jelly) jellyButtonColors(Wf.Accent, Wf.OnAccent) else ButtonDefaults.filledTonalButtonColors(),
+                    modifier = Modifier.weight(1f).height(52.dp).jellyButton(Wf.Accent),
                 ) {
                     Icon(Icons.Outlined.Wallpaper, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -266,7 +271,7 @@ private fun ExportOptionsDialog(
         activeContentColor = Wf.OnAccent,
         inactiveContainerColor = Wf.Well,
         inactiveContentColor = Wf.TextDim,
-        activeBorderColor = Wf.Accent,
+        activeBorderColor = Wf.AccentInk,
         inactiveBorderColor = Wf.Line,
     )
     AlertDialog(
@@ -316,7 +321,8 @@ private fun ExportOptionsDialog(
             Button(
                 onClick = { onExport(Scales[scaleIndex], formats[formatIndex]) },
                 shape = Wf.PillShape,
-                modifier = Modifier.testTag("export_confirm"),
+                colors = jellyButtonColors(),
+                modifier = Modifier.jellyButton(MaterialTheme.colorScheme.primary).testTag("export_confirm"),
             ) { Text("저장", fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },

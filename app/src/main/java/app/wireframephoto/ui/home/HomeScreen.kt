@@ -42,6 +42,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -93,6 +94,8 @@ fun HomeScreen(
     onUpdate: (AvailableUpdate) -> Unit,
     onOpenReleasePage: (AvailableUpdate) -> Unit,
     onDismissUpdate: (AvailableUpdate) -> Unit,
+    version: String,
+    onCheckUpdates: () -> Unit,
     onPurpose: (Purpose) -> Unit,
 ) {
     val glass = LocalWfPalette.current.glass
@@ -127,7 +130,7 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         purposeItems(onPurpose, previewHeight = 128.dp)
-                        item(span = { GridItemSpan(maxLineSpan) }) { Footnote() }
+                        item(span = { GridItemSpan(maxLineSpan) }) { Footnote(version, onCheckUpdates) }
                     }
                 }
             } else {
@@ -152,7 +155,7 @@ fun HomeScreen(
                         }
                     }
                     purposeItems(onPurpose, previewHeight = 104.dp)
-                    item(span = { GridItemSpan(maxLineSpan) }) { Footnote() }
+                    item(span = { GridItemSpan(maxLineSpan) }) { Footnote(version, onCheckUpdates) }
                 }
             }
         }
@@ -349,11 +352,16 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun Footnote() {
-    Text(
-        "갤러리에서 사진을 공유 → oh-my-photogrid로 보내도 시작돼요.\n4:5, 폴드 8 Ultra 크기는 편집 화면의 '크기'에서 고를 수 있어요.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.outline,
-        modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),
-    )
+private fun Footnote(version: String, onCheckUpdates: () -> Unit) {
+    Column(Modifier.padding(top = 12.dp, bottom = 8.dp)) {
+        Text(
+            "갤러리에서 사진을 공유 → oh-my-photogrid로 보내도 시작돼요.\n4:5, 폴드 8 Ultra 크기는 편집 화면의 '크기'에서 고를 수 있어요.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("버전 $version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            TextButton(onClick = onCheckUpdates, modifier = Modifier.testTag("check_updates")) { Text("업데이트 확인") }
+        }
+    }
 }

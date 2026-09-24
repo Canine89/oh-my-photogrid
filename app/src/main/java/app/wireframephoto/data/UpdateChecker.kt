@@ -11,15 +11,23 @@ import java.net.URL
 /** A newer release published on GitHub. [apkUrl] downloads the APK directly. */
 data class AvailableUpdate(val version: String, val apkUrl: String, val pageUrl: String)
 
+/** Outcome of a check the user asked for ("업데이트 확인"). */
+sealed interface UpdateCheck {
+    data class Available(val update: AvailableUpdate) : UpdateCheck
+    data object UpToDate : UpdateCheck
+    data object Failed : UpdateCheck
+}
+
 /**
  * Sideloaded builds get no store updates, so the app asks GitHub for the latest release.
- * One anonymous GET to api.github.com, at most every [CHECK_INTERVAL_MS]; the answer is cached
- * so the banner still shows offline. Versions the user dismissed are not offered again.
+ * One anonymous GET to api.github.com each time the app comes to the front, at most every
+ * [CHECK_INTERVAL_MS]; the answer is cached so the banner still shows offline. Versions the user
+ * dismissed are not offered again, unless they check by hand.
  */
 class UpdateChecker(private val context: Context) {
     private val prefs = context.getSharedPreferences("updates", Context.MODE_PRIVATE)
 
-    private val currentVersion: String =
+    val installedVersion: String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
 
     /** Last known newer release, without touching the network. */
@@ -32,16 +40,28 @@ class UpdateChecker(private val context: Context) {
 
     /** Refreshes from GitHub when the cache is stale; network failures just keep the cache. */
     suspend fun check(): AvailableUpdate? {
-        val now = System.currentTimeMillis()
-        if (now - prefs.getLong(KEY_CHECKED_AT, 0) < CHECK_INTERVAL_MS) return cached()
-        val latest = withContext(Dispatchers.IO) { runCatching { fetchLatest() }.getOrNull() } ?: return cached()
+        if (System.currentTimeMillis() - prefs.getLong(KEY_CHECKED_AT, 0) < CHECK_INTERVAL_MS) return cached()
+        return refresh()?.takeIf(::offerable) ?: cached()
+    }
+
+    /** "업데이트 확인": always asks GitHub, and shows a version even if it was dismissed before. */
+    suspend fun checkNow(): UpdateCheck {
+        val latest = refresh() ?: return UpdateCheck.Failed
+        if (!Versions.isNewer(latest.version, installedVersion)) return UpdateCheck.UpToDate
+        prefs.edit().remove(KEY_DISMISSED).apply()
+        return UpdateCheck.Available(latest)
+    }
+
+    /** Fetches the latest release and caches it; null if GitHub couldn't be reached. */
+    private suspend fun refresh(): AvailableUpdate? {
+        val latest = withContext(Dispatchers.IO) { runCatching { fetchLatest() }.getOrNull() } ?: return null
         prefs.edit()
-            .putLong(KEY_CHECKED_AT, now)
+            .putLong(KEY_CHECKED_AT, System.currentTimeMillis())
             .putString(KEY_VERSION, latest.version)
             .putString(KEY_APK, latest.apkUrl)
             .putString(KEY_PAGE, latest.pageUrl)
             .apply()
-        return latest.takeIf(::offerable)
+        return latest
     }
 
     /** "나중에": hide this version; a later release will be offered again. */
@@ -50,7 +70,7 @@ class UpdateChecker(private val context: Context) {
     }
 
     private fun offerable(update: AvailableUpdate) =
-        Versions.isNewer(update.version, currentVersion) && update.version != prefs.getString(KEY_DISMISSED, null)
+        Versions.isNewer(update.version, installedVersion) && update.version != prefs.getString(KEY_DISMISSED, null)
 
     private fun fetchLatest(): AvailableUpdate? {
         val conn = URL(LATEST_URL).openConnection() as HttpURLConnection
@@ -58,7 +78,7 @@ class UpdateChecker(private val context: Context) {
             conn.connectTimeout = 8_000
             conn.readTimeout = 8_000
             conn.setRequestProperty("Accept", "application/vnd.github+json")
-            conn.setRequestProperty("User-Agent", "oh-my-photogrid/$currentVersion")
+            conn.setRequestProperty("User-Agent", "oh-my-photogrid/$installedVersion")
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return null
             val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
             val assets = json.getJSONArray("assets")
@@ -72,7 +92,9 @@ class UpdateChecker(private val context: Context) {
 
     private companion object {
         const val LATEST_URL = "https://api.github.com/repos/Canine89/oh-my-photogrid/releases/latest"
-        const val CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L
+        // Short enough that a new release shows up the next time the app is opened; GitHub allows
+        // 60 anonymous requests an hour per address, far above this.
+        const val CHECK_INTERVAL_MS = 10 * 60 * 1000L
         const val KEY_CHECKED_AT = "checked_at"
         const val KEY_VERSION = "latest_version"
         const val KEY_APK = "latest_apk"

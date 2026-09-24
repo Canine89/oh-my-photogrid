@@ -1,17 +1,17 @@
 # oh-my-photogrid
 
 ## 다운로드
-**[최신 APK 받기 (Releases)](https://github.com/Canine89/oh-my-photogrid/releases/latest)** — `oh-my-photogrid-1.6.1.apk`
+**[최신 APK 받기 (Releases)](https://github.com/Canine89/oh-my-photogrid/releases/latest)** — `oh-my-photogrid-1.6.2.apk`
 
 설치 방법 (Galaxy Z Fold 8 / Android 10 이상):
 1. APK를 휴대폰에 받은 뒤 **내 파일**에서 연다. **"이 출처 허용"**을 켜고 **설치**를 누른다
 2. 설치가 막히면 **설정 → 보안 및 개인정보 보호 → 자동 차단**을 잠시 끄고 다시 시도한다
-3. 또는 PC에서 `adb install -r oh-my-photogrid-1.6.1.apk`
+3. 또는 PC에서 `adb install -r oh-my-photogrid-1.6.2.apk`
 
-무결성 확인: `shasum -a 256 oh-my-photogrid-1.6.1.apk`의 결과를 릴리스에 첨부된 `.sha256` 파일과 비교한다.
+무결성 확인: `shasum -a 256 oh-my-photogrid-1.6.2.apk`의 결과를 릴리스에 첨부된 `.sha256` 파일과 비교한다.
 
 **업데이트**
-- 1.4.0부터는 새 버전이 나오면 홈 화면에 알림이 뜬다. **업데이트**를 누르면 앱이 APK를 받아 시스템 업데이트 창을 띄운다. 처음 한 번만 "이 출처 허용"을 켜면 된다.
+- 1.4.0부터는 새 버전이 나오면 홈 화면에 알림이 뜬다. 홈 화면 맨 아래 **업데이트 확인**으로 바로 확인할 수도 있다(1.6.2부터). **업데이트**를 누르면 앱이 APK를 받아 시스템 업데이트 창을 띄운다. 처음 한 번만 "이 출처 허용"을 켜면 된다.
 - 1.3.0 이하를 쓰고 있다면 1.4.0은 직접 설치해야 한다. 기존 앱을 지우지 말고 새 APK를 그대로 설치하면 **업데이트**로 설치되고, 설정과 저장한 사진이 그대로 남는다. 모든 버전이 같은 패키지명(`app.wireframephoto`)과 같은 서명 인증서를 쓰기 때문이다.
 
 

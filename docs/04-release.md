@@ -56,7 +56,7 @@ scripts/build_release.sh
 배포할 때마다 `app/build.gradle.kts`의 `versionCode`를 1씩 올리고, `versionName`도 바꾼다.
 
 ### 앱 안 업데이트 (1.4.0부터)
-- 앱은 화면에 돌아올 때마다(최소 10분 간격) `https://api.github.com/repos/Canine89/oh-my-photogrid/releases/latest`를 확인한다(`data/UpdateChecker.kt`)
+- 앱은 화면에 돌아올 때마다(최소 1분 간격, ETag 조건부 요청이라 바뀐 게 없으면 요청 한도에 포함되지 않음) `https://api.github.com/repos/Canine89/oh-my-photogrid/releases/latest`를 확인한다(`data/UpdateChecker.kt`)
   - 홈 화면 맨 아래의 **업데이트 확인**을 누르면 간격과 상관없이 바로 확인한다. 전에 닫은 버전도 다시 보여 준다
   - 1.4.0~1.6.1은 앱을 새로 켤 때만, 6시간 간격으로 확인했다. 그래서 새 버전이 늦게 뜰 수 있다
   - 태그 `vX.Y.Z`가 설치된 `versionName`보다 높으면 홈 화면에 알림을 띄운다
@@ -72,7 +72,7 @@ scripts/build_release.sh
 1. **ADB (권장, 개발자 인증 예외 대상)**
    폴드 8에서 개발자 옵션 → USB 디버깅을 켠 뒤:
    ```bash
-   adb install -r dist/oh-my-photogrid-1.7.0.apk
+   adb install -r dist/oh-my-photogrid-1.7.1.apk
    ```
 2. **파일로 전달**
    APK를 기기로 옮긴 뒤 내 파일 앱에서 열기 → "이 출처 허용" → 설치.

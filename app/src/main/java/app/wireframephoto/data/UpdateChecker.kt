@@ -21,8 +21,9 @@ sealed interface UpdateCheck {
 /**
  * Sideloaded builds get no store updates, so the app asks GitHub for the latest release.
  * One anonymous GET to api.github.com each time the app comes to the front, at most every
- * [CHECK_INTERVAL_MS]; the answer is cached so the banner still shows offline. Versions the user
- * dismissed are not offered again, unless they check by hand.
+ * [CHECK_INTERVAL_MS]. Requests carry the last ETag, so an unchanged answer is a 304 that GitHub
+ * doesn't count against its rate limit. The answer is cached so the banner still shows offline.
+ * Versions the user dismissed are not offered again, unless they check by hand.
  */
 class UpdateChecker(private val context: Context) {
     private val prefs = context.getSharedPreferences("updates", Context.MODE_PRIVATE)
@@ -64,6 +65,14 @@ class UpdateChecker(private val context: Context) {
         return latest
     }
 
+    /** The cached release without the "newer / not dismissed" filter (a 304 means it's current). */
+    private fun cachedRelease(): AvailableUpdate? {
+        val version = prefs.getString(KEY_VERSION, null) ?: return null
+        val apk = prefs.getString(KEY_APK, null) ?: return null
+        val page = prefs.getString(KEY_PAGE, null) ?: return null
+        return AvailableUpdate(version, apk, page)
+    }
+
     /** "나중에": hide this version; a later release will be offered again. */
     fun dismiss(update: AvailableUpdate) {
         prefs.edit().putString(KEY_DISMISSED, update.version).apply()
@@ -79,7 +88,10 @@ class UpdateChecker(private val context: Context) {
             conn.readTimeout = 8_000
             conn.setRequestProperty("Accept", "application/vnd.github+json")
             conn.setRequestProperty("User-Agent", "oh-my-photogrid/$installedVersion")
+            prefs.getString(KEY_ETAG, null)?.let { conn.setRequestProperty("If-None-Match", it) }
+            if (conn.responseCode == HttpURLConnection.HTTP_NOT_MODIFIED) return cachedRelease()
             if (conn.responseCode != HttpURLConnection.HTTP_OK) return null
+            conn.getHeaderField("ETag")?.let { prefs.edit().putString(KEY_ETAG, it).apply() }
             val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
             val assets = json.getJSONArray("assets")
             val apk = (0 until assets.length()).map { assets.getJSONObject(it).getString("browser_download_url") }
@@ -92,13 +104,14 @@ class UpdateChecker(private val context: Context) {
 
     private companion object {
         const val LATEST_URL = "https://api.github.com/repos/Canine89/oh-my-photogrid/releases/latest"
-        // Short enough that a new release shows up the next time the app is opened; GitHub allows
-        // 60 anonymous requests an hour per address, far above this.
-        const val CHECK_INTERVAL_MS = 10 * 60 * 1000L
+        // GitHub caches this answer for 60 s, so checking more often can't see anything newer.
+        // Unchanged answers are 304s, which don't count against the 60/hour anonymous limit.
+        const val CHECK_INTERVAL_MS = 60 * 1000L
         const val KEY_CHECKED_AT = "checked_at"
         const val KEY_VERSION = "latest_version"
         const val KEY_APK = "latest_apk"
         const val KEY_PAGE = "latest_page"
         const val KEY_DISMISSED = "dismissed_version"
+        const val KEY_ETAG = "latest_etag"
     }
 }

@@ -53,8 +53,8 @@ val SampleColors = listOf(Color(0xFF7FD1FF), Color(0xFFFFC56E), Color(0xFFFF8A8A
 @Composable
 fun PurposePreview(purpose: Purpose, modifier: Modifier = Modifier) {
     val aspect = purpose.preset.aspect
-    val bezelColor = Wf.Mist
-    val screenColor = Wf.Steel
+    val bezelColor = Wf.TextDim
+    val screenColor = Wf.Raised
     val glyphColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
     val outline = MaterialTheme.colorScheme.outline
     Canvas(modifier) {
@@ -101,7 +101,7 @@ fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifi
     Surface(
         onClick = onClick,
         shape = Wf.CardShape,
-        color = Wf.Graphite,
+        color = Wf.Card,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         interactionSource = interaction,
         modifier = modifier.pressScale(interaction).testTag("purpose_${purpose.presetId}"),
@@ -109,7 +109,7 @@ fun PurposeCard(purpose: Purpose, onClick: () -> Unit, previewHeight: Dp, modifi
         Column(Modifier.padding(10.dp)) {
             Box(
                 Modifier.fillMaxWidth().height(previewHeight).clip(RoundedCornerShape(20.dp))
-                    .background(if (purpose.deviceFrame) Wf.GlowBrush else SolidColor(Wf.Slate)),
+                    .background(if (purpose.deviceFrame) Wf.GlowBrush else SolidColor(Wf.Well)),
                 contentAlignment = Alignment.Center,
             ) {
                 PurposePreview(purpose, Modifier.fillMaxSize().padding(12.dp))
@@ -143,7 +143,7 @@ fun PurposeRow(purpose: Purpose, selected: Boolean, onClick: () -> Unit, modifie
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        color = if (selected) Wf.Steel else Wf.Slate,
+        color = if (selected) Wf.Raised else Wf.Well,
         border = if (selected) BorderStroke(2.dp, primary) else null,
         interactionSource = interaction,
         modifier = modifier.pressScale(interaction).testTag("preset_${purpose.presetId}").semantics { this.selected = selected },
@@ -166,16 +166,17 @@ fun PurposeRow(purpose: Purpose, selected: Boolean, onClick: () -> Unit, modifie
     }
 }
 
-/** App mark: a lime three-cell wireframe, the same motif as the launcher icon. */
+/** App mark: a three-cell wireframe in the theme accents, the same motif as the launcher icon. */
 @Composable
 fun BrandMark(modifier: Modifier = Modifier) {
+    val (a, b, c) = listOf(Wf.Accent, Wf.Accent2, Wf.Accent3)
     Canvas(modifier) {
         val g = size.minDimension * 0.08f
         val r = CornerRadius(size.minDimension * 0.14f)
         val w = size.width
         val h = size.height
-        drawRoundRect(Wf.Lime, Offset(0f, 0f), Size(w * 0.58f - g / 2, h), r)
-        drawRoundRect(Wf.Violet, Offset(w * 0.58f + g / 2, 0f), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
-        drawRoundRect(Wf.Coral, Offset(w * 0.58f + g / 2, h / 2 + g / 2), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
+        drawRoundRect(a, Offset(0f, 0f), Size(w * 0.58f - g / 2, h), r)
+        drawRoundRect(b, Offset(w * 0.58f + g / 2, 0f), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
+        drawRoundRect(c, Offset(w * 0.58f + g / 2, h / 2 + g / 2), Size(w * 0.42f - g / 2, h / 2 - g / 2), r)
     }
 }

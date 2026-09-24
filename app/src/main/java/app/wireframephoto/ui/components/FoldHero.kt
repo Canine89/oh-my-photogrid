@@ -69,9 +69,13 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
     val template = if (unfolded) Templates.defaultFor(4, mainAspect) else Templates.defaultFor(3, coverAspect)
     val cells = animateCells(template.cells.map { Rect(it.left, it.top, it.right, it.bottom) })
 
+    val glow = Wf.GlowBrush
+    val body = Wf.DeviceBody
+    val edge = Wf.DeviceEdge
+    val screenColor = Wf.DeviceScreen
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Canvas(Modifier.fillMaxWidth().height(height)) {
-            drawRect(Wf.GlowBrush, size = size)
+            drawRect(glow, size = size)
             val bezel = 6.dp.toPx()
             val box = CollageGeometry.fit(aspect, size.width * 0.9f, size.height * 0.92f)
             val screen = Rect(
@@ -79,19 +83,19 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
                 (size.width + box.width) / 2f - bezel, (size.height + box.height) / 2f - bezel,
             )
             drawRoundRect(
-                Wf.Steel,
+                body,
                 topLeft = Offset(screen.left - bezel, screen.top - bezel),
                 size = Size(screen.width + 2 * bezel, screen.height + 2 * bezel),
                 cornerRadius = CornerRadius(18.dp.toPx()),
             )
             drawRoundRect(
-                Wf.Fog,
+                edge,
                 topLeft = Offset(screen.left - bezel, screen.top - bezel),
                 size = Size(screen.width + 2 * bezel, screen.height + 2 * bezel),
                 cornerRadius = CornerRadius(18.dp.toPx()),
                 style = Stroke(1.dp.toPx()),
             )
-            drawRoundRect(Wf.Graphite, Offset(screen.left, screen.top), Size(screen.width, screen.height), CornerRadius(12.dp.toPx()))
+            drawRoundRect(screenColor, Offset(screen.left, screen.top), Size(screen.width, screen.height), CornerRadius(12.dp.toPx()))
             val gap = 3.dp.toPx()
             val px = CollageGeometry.cellRects(
                 cells.map { app.wireframephoto.core.NRect(it.left, it.top, it.right, it.bottom) },
@@ -102,7 +106,7 @@ fun FoldHero(height: Dp, modifier: Modifier = Modifier) {
                     drawScene(Rect(screen.left + r.left, screen.top + r.top, screen.left + r.right, screen.top + r.bottom), Scenes[i % Scenes.size])
                 }
             }
-            drawCircle(Wf.Ink, 3.dp.toPx(), Offset(screen.center.x, screen.top + 8.dp.toPx()))
+            drawCircle(Color.Black, 3.dp.toPx(), Offset(screen.center.x, screen.top + 8.dp.toPx()))
         }
         AnimatedContent(unfolded, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "caption") { open ->
             Text(

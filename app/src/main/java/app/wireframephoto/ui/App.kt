@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.wireframephoto.core.Templates
 import app.wireframephoto.ui.editor.EditorScreen
 import app.wireframephoto.ui.home.HomeScreen
+import app.wireframephoto.ui.theme.AppTheme
 
 val ImagesOnly = PickVisualMediaRequest(PickVisualMedia.ImageOnly)
 
@@ -26,7 +27,7 @@ fun Context.persistReadAccess(uris: List<Uri>) {
 }
 
 @Composable
-fun WireframeAppUi(viewModel: EditorViewModel) {
+fun WireframeAppUi(viewModel: EditorViewModel, theme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     val editing by viewModel.isEditing.collectAsStateWithLifecycle()
     val context = LocalContext.current
     // Purpose chosen on the home screen, kept while the Photo Picker is open.
@@ -44,9 +45,13 @@ fun WireframeAppUi(viewModel: EditorViewModel) {
     if (editing) {
         EditorScreen(viewModel)
     } else {
-        HomeScreen(onPurpose = { purpose ->
-            pendingPreset = purpose.presetId
-            pickPhotos.launch(ImagesOnly)
-        })
+        HomeScreen(
+            theme = theme,
+            onThemeChange = onThemeChange,
+            onPurpose = { purpose ->
+                pendingPreset = purpose.presetId
+                pickPhotos.launch(ImagesOnly)
+            },
+        )
     }
 }

@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
@@ -54,18 +55,24 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import app.wireframephoto.core.CollageState
 import app.wireframephoto.data.ExportFormat
 import app.wireframephoto.data.ImageSaver
 import app.wireframephoto.render.BitmapLoader
 import app.wireframephoto.ui.ExportStatus
 import app.wireframephoto.ui.components.MorphingLoader
+import app.wireframephoto.ui.theme.AppTheme
+import app.wireframephoto.ui.theme.LocalAppTheme
+import app.wireframephoto.ui.theme.LocalWfPalette
 import app.wireframephoto.ui.theme.LocalReducedMotion
 import app.wireframephoto.ui.theme.Wf
 import kotlinx.coroutines.launch
@@ -90,7 +97,7 @@ fun ExportDialogs(
         is ExportStatus.Done -> FullScreen(onDismiss = onDismissStatus) { Reveal(status, loader, onDismissStatus) }
         is ExportStatus.Failed -> AlertDialog(
             onDismissRequest = onDismissStatus,
-            containerColor = Wf.Graphite,
+            containerColor = Wf.Card,
             title = { Text("저장하지 못했어요") },
             text = { Text(status.message) },
             confirmButton = { TextButton(onClick = onDismissStatus) { Text("확인") } },
@@ -104,7 +111,13 @@ private fun FullScreen(onDismiss: () -> Unit, content: @Composable () -> Unit) {
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        Box(Modifier.fillMaxSize().background(Wf.Ink.copy(alpha = 0.97f)).safeDrawingPadding(), contentAlignment = Alignment.Center) {
+        // The dialog is its own window: give its bar icons the same contrast as the activity's.
+        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        val light = LocalWfPalette.current.isLight
+        SideEffect {
+            window?.let { WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars = light }
+        }
+        Box(Modifier.fillMaxSize().background(Wf.Bg.copy(alpha = 0.97f)).safeDrawingPadding(), contentAlignment = Alignment.Center) {
             content()
         }
     }
@@ -115,11 +128,11 @@ private fun FullScreen(onDismiss: () -> Unit, content: @Composable () -> Unit) {
 private fun Developing(progress: Float, onCancel: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
         MorphingLoader(Modifier.size(96.dp))
-        Text("현상하는 중…", style = MaterialTheme.typography.headlineSmall)
+        Text(if (LocalAppTheme.current == AppTheme.Album) "앨범에 담는 중…" else "현상하는 중…", style = MaterialTheme.typography.headlineSmall)
         Text(
             "${(progress * 100).toInt()}%",
             style = MaterialTheme.typography.titleMedium,
-            color = Wf.Lime,
+            color = Wf.Accent,
         )
         TextButton(onClick = onCancel) { Text("취소") }
     }
@@ -151,7 +164,7 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("완성!", style = MaterialTheme.typography.displaySmall, color = Wf.Lime)
+        Text("완성!", style = MaterialTheme.typography.displaySmall, color = Wf.Accent)
         Spacer(Modifier.height(4.dp))
         Text(
             "갤러리의 ${ImageSaver.ALBUM} 앨범에 ${status.width}×${status.height}로 저장했어요",
@@ -163,7 +176,7 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
         val aspect = status.width.toFloat() / status.height
         Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.Center) {
             Surface(
-                color = Wf.Paper,
+                color = Wf.Print,
                 shape = RoundedCornerShape(6.dp),
                 modifier = Modifier
                     .graphicsLayer {
@@ -175,7 +188,7 @@ private fun Reveal(status: ExportStatus.Done, loader: BitmapLoader, onClose: () 
             ) {
                 Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 34.dp)) {
                     val img = image
-                    Box(Modifier.widthIn(max = 420.dp).aspectRatio(aspect).background(Wf.Ink)) {
+                    Box(Modifier.widthIn(max = 420.dp).aspectRatio(aspect).background(Wf.Bg)) {
                         if (img != null) {
                             val d = develop.value
                             Image(
@@ -249,16 +262,16 @@ private fun ExportOptionsDialog(
     var scaleIndex by rememberSaveable { mutableIntStateOf(0) }
     val formats = ExportFormat.entries
     val segmentColors = SegmentedButtonDefaults.colors(
-        activeContainerColor = Wf.Lime,
-        activeContentColor = Wf.OnLime,
-        inactiveContainerColor = Wf.Slate,
-        inactiveContentColor = Wf.Mist,
-        activeBorderColor = Wf.Lime,
-        inactiveBorderColor = Wf.Fog,
+        activeContainerColor = Wf.Accent,
+        activeContentColor = Wf.OnAccent,
+        inactiveContainerColor = Wf.Well,
+        inactiveContentColor = Wf.TextDim,
+        activeBorderColor = Wf.Accent,
+        inactiveBorderColor = Wf.Line,
     )
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Wf.Graphite,
+        containerColor = Wf.Card,
         shape = Wf.SheetShape,
         title = { Text("갤러리에 저장") },
         text = {

@@ -51,7 +51,7 @@ adb emu fold / adb emu unfold # 접기/펴기 (접으면 화면이 꺼지므로 
 ## 4. 릴리스 빌드
 ```bash
 scripts/build_release.sh
-# → dist/WireframePhoto-<version>.apk 와 .sha256 생성
+# → dist/oh-my-photogrid-<version>.apk 와 .sha256 생성
 ```
 배포할 때마다 `app/build.gradle.kts`의 `versionCode`를 1씩 올리고, `versionName`도 바꾼다.
 
@@ -59,7 +59,7 @@ scripts/build_release.sh
 1. **ADB (권장, 개발자 인증 예외 대상)**
    폴드 8에서 개발자 옵션 → USB 디버깅을 켠 뒤:
    ```bash
-   adb install -r dist/WireframePhoto-1.2.0.apk
+   adb install -r dist/oh-my-photogrid-1.3.0.apk
    ```
 2. **파일로 전달**
    APK를 기기로 옮긴 뒤 내 파일 앱에서 열기 → "이 출처 허용" → 설치.
@@ -79,7 +79,7 @@ scripts/build_release.sh
 - [ ] 메인 화면에서 편집 중 접기: 커버 화면에서 이어서 편집 가능
 - [ ] Flex 모드(반쯤 접어 세우기): 캔버스가 접힌 선 위에 오는지
 - [ ] 분할 화면에서 Samsung 갤러리 사진을 캔버스 칸으로 드래그 앤 드롭
-- [ ] 갤러리 → 공유 → 와이어프레임 포토로 여러 장 보내기
+- [ ] 갤러리 → 공유 → oh-my-photogrid로 여러 장 보내기
 - [ ] 50MP 원본(및 Ultra의 200MP 원본)과 HEIC 사진 저장
 - [ ] 저장 후 "배경화면으로 설정" → 커버/메인 배경화면이 잘림 없이 딱 맞는지
 - [ ] 다크 모드, 시스템 글꼴 크기를 가장 크게 했을 때

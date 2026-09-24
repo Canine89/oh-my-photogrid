@@ -341,7 +341,7 @@ fun EditorScreen(viewModel: EditorViewModel) {
     val wideWindow = configuration.screenWidthDp >= 600 && configuration.screenWidthDp > configuration.screenHeightDp
     AnimatedVisibility(visible = showGuide, enter = fadeIn(), exit = fadeOut()) {
         Box(
-            Modifier.fillMaxSize().background(Wf.Ink.copy(alpha = 0.72f))
+            Modifier.fillMaxSize().background(Wf.Bg.copy(alpha = 0.72f))
                 // Swallow touches so the editor underneath can't be used, without merging semantics
                 // (a clickable scrim would hide the card's content from TalkBack).
                 .pointerInput(Unit) { detectTapGestures { } }
@@ -356,7 +356,7 @@ fun EditorScreen(viewModel: EditorViewModel) {
     if (confirmExit) {
         AlertDialog(
             onDismissRequest = { confirmExit = false },
-            containerColor = Wf.Graphite,
+            containerColor = Wf.Card,
             title = { Text("처음 화면으로 갈까요?") },
             text = { Text("저장하지 않은 콜라주는 사라져요.") },
             confirmButton = {
@@ -388,7 +388,7 @@ private fun CompactToolSheet(tool: Tool, onClose: () -> Unit, modifier: Modifier
     Surface(
         modifier.shadow(20.dp, Wf.SheetShape).testTag("panel_${tool.name}"),
         shape = Wf.SheetShape,
-        color = Wf.Graphite,
+        color = Wf.Card,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column {
@@ -414,7 +414,7 @@ private fun CompactToolSheet(tool: Tool, onClose: () -> Unit, modifier: Modifier
 @Composable
 private fun AmbientGlow(state: CollageState, loader: BitmapLoader, modifier: Modifier) {
     val uris = state.slots.take(state.template.count).mapNotNull { it.uri }
-    val target by produceState(Wf.Lime, uris) {
+    val target by produceState(Wf.Accent, uris) {
         val colors = uris.mapNotNull { loader.averageColor(it) }
         if (colors.isEmpty()) return@produceState
         val hsl = FloatArray(3)
@@ -500,12 +500,12 @@ private fun CellActionBar(
     Surface(
         modifier = Modifier.shadow(16.dp, Wf.PillShape).testTag("cell_actions"),
         shape = Wf.PillShape,
-        color = Wf.Steel,
-        border = BorderStroke(1.dp, Wf.Fog.copy(alpha = 0.6f)),
+        color = Wf.Raised,
+        border = BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
     ) {
         Row(Modifier.padding(start = 8.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(28.dp).background(Wf.Lime, CircleShape), contentAlignment = Alignment.Center) {
-                Text("$number", style = MaterialTheme.typography.labelLarge, color = Wf.OnLime)
+            Box(Modifier.size(28.dp).background(Wf.Accent, CircleShape), contentAlignment = Alignment.Center) {
+                Text("$number", style = MaterialTheme.typography.labelLarge, color = Wf.OnAccent)
             }
             TextButton(onClick = onReplace) {
                 Icon(Icons.Outlined.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
@@ -535,8 +535,8 @@ private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
     Surface(
         Modifier.widthIn(max = 440.dp).shadow(24.dp, Wf.SheetShape).testTag("guide"),
         shape = Wf.SheetShape,
-        color = Wf.Graphite,
-        border = BorderStroke(1.dp, Wf.Fog),
+        color = Wf.Card,
+        border = BorderStroke(1.dp, Wf.Line),
     ) {
         Column(
             Modifier.verticalScroll(rememberScrollState()).padding(22.dp),
@@ -559,8 +559,8 @@ private fun GuideCard(toolsWhere: String, onDismiss: () -> Unit) {
 @Composable
 private fun GuideRow(icon: ImageVector, text: String) {
     Row(verticalAlignment = Alignment.Top) {
-        Box(Modifier.size(34.dp).background(Wf.Slate, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = Wf.Lime, modifier = Modifier.size(20.dp))
+        Box(Modifier.size(34.dp).background(Wf.Well, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = Wf.Accent, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(12.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))

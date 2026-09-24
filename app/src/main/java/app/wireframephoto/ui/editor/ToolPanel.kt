@@ -121,10 +121,10 @@ fun ToolSidePanel(
     callbacks: ToolCallbacks,
     modifier: Modifier = Modifier,
 ) {
-    Surface(modifier, shape = Wf.SheetShape, color = Wf.Graphite, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+    Surface(modifier, shape = Wf.SheetShape, color = Wf.Card, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
         Column(Modifier.fillMaxSize()) {
             Row(
-                Modifier.padding(10.dp).fillMaxWidth().background(Wf.Ink, Wf.PillShape).padding(4.dp),
+                Modifier.padding(10.dp).fillMaxWidth().background(Wf.Bg, Wf.PillShape).padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Tool.entries.forEach { t -> ToolPill(t, tool == t, Modifier.weight(1f)) { onTool(t) } }
@@ -153,8 +153,8 @@ fun FloatingToolBar(
     Surface(
         modifier = modifier.alpha(alpha).shadow(18.dp, Wf.PillShape, ambientColor = Color.Black, spotColor = Color.Black),
         shape = Wf.PillShape,
-        color = Wf.Steel.copy(alpha = 0.97f),
-        border = BorderStroke(1.dp, Wf.Fog.copy(alpha = 0.6f)),
+        color = Wf.Raised.copy(alpha = 0.97f),
+        border = BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
     ) {
         Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Tool.entries.forEach { t -> ToolPill(t, openTool == t, Modifier.width(66.dp)) { onToggle(t) } }
@@ -173,13 +173,13 @@ fun ShufflePill(onShuffle: () -> Unit, dimmed: Boolean, modifier: Modifier = Mod
     Surface(
         onClick = { haptics.performHapticFeedback(HapticFeedbackType.Confirm); onShuffle() },
         shape = Wf.PillShape,
-        color = Wf.Steel.copy(alpha = 0.97f),
-        border = BorderStroke(1.dp, Wf.Fog.copy(alpha = 0.6f)),
+        color = Wf.Raised.copy(alpha = 0.97f),
+        border = BorderStroke(1.dp, Wf.Line.copy(alpha = 0.6f)),
         interactionSource = interaction,
         modifier = modifier.alpha(alpha).pressScale(interaction).shadow(14.dp, Wf.PillShape).testTag("shuffle"),
     ) {
         Row(Modifier.padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Casino, contentDescription = null, tint = Wf.Lime)
+            Icon(Icons.Outlined.Casino, contentDescription = null, tint = Wf.Accent)
             Spacer(Modifier.width(8.dp))
             Text("섞어 보기", style = MaterialTheme.typography.labelLarge)
         }
@@ -193,8 +193,8 @@ private fun ShuffleButton(onShuffle: () -> Unit) {
     Surface(
         onClick = { haptics.performHapticFeedback(HapticFeedbackType.Confirm); onShuffle() },
         shape = CircleShape,
-        color = Wf.Lime,
-        contentColor = Wf.OnLime,
+        color = Wf.Accent,
+        contentColor = Wf.OnAccent,
         interactionSource = interaction,
         modifier = Modifier.size(52.dp).pressScale(interaction, 0.88f).testTag("shuffle")
             .semantics { contentDescription = "섞어 보기: 배치와 스타일을 무작위로" },
@@ -206,8 +206,8 @@ private fun ShuffleButton(onShuffle: () -> Unit) {
 /** One tool: icon in a pill that lights up lime when active, label underneath. */
 @Composable
 private fun ToolPill(tool: Tool, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (selected) Wf.Lime else Color.Transparent, Wf.snappy(), label = "pillBg")
-    val fg by animateColorAsState(if (selected) Wf.OnLime else Wf.Mist, Wf.snappy(), label = "pillFg")
+    val bg by animateColorAsState(if (selected) Wf.Accent else Color.Transparent, Wf.snappy(), label = "pillBg")
+    val fg by animateColorAsState(if (selected) Wf.OnAccent else Wf.TextDim, Wf.snappy(), label = "pillFg")
     val interaction = remember { MutableInteractionSource() }
     Column(
         modifier
@@ -229,7 +229,7 @@ private fun ToolPill(tool: Tool, selected: Boolean, modifier: Modifier, onClick:
         Text(
             tool.title,
             style = MaterialTheme.typography.labelSmall,
-            color = if (selected) Wf.Paper else Wf.Mist,
+            color = if (selected) Wf.Text else Wf.TextDim,
         )
     }
 }
@@ -266,10 +266,10 @@ fun ToolSection(
 
 @Composable
 private fun pillChipColors() = FilterChipDefaults.filterChipColors(
-    containerColor = Wf.Slate,
-    labelColor = Wf.Mist,
-    selectedContainerColor = Wf.Lime,
-    selectedLabelColor = Wf.OnLime,
+    containerColor = Wf.Well,
+    labelColor = Wf.TextDim,
+    selectedContainerColor = Wf.Accent,
+    selectedLabelColor = Wf.OnAccent,
 )
 
 @Composable
@@ -311,8 +311,8 @@ private fun LayoutSection(state: CollageState, loader: BitmapLoader, onSelect: (
                 Modifier
                     .pressScale(interaction, 0.92f)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (selected) Wf.Steel else Wf.Slate)
-                    .border(if (selected) BorderStroke(2.5.dp, Wf.Lime) else BorderStroke(0.dp, Color.Transparent), RoundedCornerShape(16.dp))
+                    .background(if (selected) Wf.Raised else Wf.Well)
+                    .border(if (selected) BorderStroke(2.5.dp, Wf.Accent) else BorderStroke(0.dp, Color.Transparent), RoundedCornerShape(16.dp))
                     .clickable(interactionSource = interaction, indication = null) {
                         haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                         onSelect(t.id)
@@ -383,8 +383,8 @@ private fun PhotoTile(number: Int, uri: String?, selected: Boolean, loader: Bitm
             .aspectRatio(1f)
             .pressScale(interaction, 0.92f)
             .clip(shape)
-            .background(Wf.Slate)
-            .border(if (selected) BorderStroke(3.dp, Wf.Lime) else BorderStroke(0.dp, Color.Transparent), shape)
+            .background(Wf.Well)
+            .border(if (selected) BorderStroke(3.dp, Wf.Accent) else BorderStroke(0.dp, Color.Transparent), shape)
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .semantics { contentDescription = if (uri == null) "${number}번 칸에 사진 추가" else "${number}번 사진" }
             .testTag("photo_tile_$number"),
@@ -395,16 +395,16 @@ private fun PhotoTile(number: Int, uri: String?, selected: Boolean, loader: Bitm
             Image(img, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else if (uri == null) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Outlined.AddPhotoAlternate, contentDescription = null, tint = Wf.Mist)
-                Text("추가", style = MaterialTheme.typography.labelSmall, color = Wf.Mist)
+                Icon(Icons.Outlined.AddPhotoAlternate, contentDescription = null, tint = Wf.TextDim)
+                Text("추가", style = MaterialTheme.typography.labelSmall, color = Wf.TextDim)
             }
         }
         Box(
             Modifier.align(Alignment.TopStart).padding(6.dp).size(20.dp)
-                .background(if (selected) Wf.Lime else Color.Black.copy(alpha = 0.6f), CircleShape),
+                .background(if (selected) Wf.Accent else Color.Black.copy(alpha = 0.6f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text("$number", style = MaterialTheme.typography.labelSmall, color = if (selected) Wf.OnLime else Color.White, fontWeight = FontWeight.Bold)
+            Text("$number", style = MaterialTheme.typography.labelSmall, color = if (selected) Wf.OnAccent else Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -452,11 +452,11 @@ private fun StyleSection(style: CollageStyle, onChange: (CollageStyle, Boolean) 
                     Modifier
                         .size(42.dp)
                         .pressScale(interaction, 0.85f)
-                        .border(if (selected) 2.5.dp else 0.dp, if (selected) Wf.Lime else Color.Transparent, CircleShape)
+                        .border(if (selected) 2.5.dp else 0.dp, if (selected) Wf.Accent else Color.Transparent, CircleShape)
                         .padding(if (selected) 5.dp else 0.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape)
+                        .border(1.dp, Wf.Text.copy(alpha = 0.12f), CircleShape)
                         .clickable(interactionSource = interaction, indication = null) {
                             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                             onChange(style.copy(backgroundColor = argb), true)
@@ -491,8 +491,8 @@ private fun StyleSlider(
             Text(
                 value.toInt().toString(),
                 style = MaterialTheme.typography.labelMedium,
-                color = Wf.Lime,
-                modifier = Modifier.background(Wf.Slate, Wf.PillShape).padding(horizontal = 10.dp, vertical = 2.dp),
+                color = Wf.Accent,
+                modifier = Modifier.background(Wf.Well, Wf.PillShape).padding(horizontal = 10.dp, vertical = 2.dp),
             )
         }
         Slider(

@@ -197,8 +197,8 @@ fun CollageCanvas(
                 Modifier
                     .offset { IntOffset((frame.left - bezel).roundToInt(), (frame.top - bezel).roundToInt()) }
                     .size(with(density) { (canvasW + 2 * bezel).toDp() }, with(density) { (canvasH + 2 * bezel).toDp() })
-                    .background(Wf.Steel, RoundedCornerShape(screenRadius + 7.dp))
-                    .border(1.dp, Wf.Fog, RoundedCornerShape(screenRadius + 7.dp)),
+                    .background(Wf.DeviceBody, RoundedCornerShape(screenRadius + 7.dp))
+                    .border(1.dp, Wf.DeviceEdge, RoundedCornerShape(screenRadius + 7.dp)),
             )
         }
         Canvas(

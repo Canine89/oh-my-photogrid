@@ -58,10 +58,12 @@ fun LiveTemplateThumbnail(
     photos: List<ImageBitmap?>,
     modifier: Modifier = Modifier,
 ) {
+    val print = Wf.Print
+    val hole = Wf.PrintHole
     Canvas(modifier.aspectRatio(aspect)) {
         val gap = 2.dp.toPx()
         val corner = CornerRadius(3.dp.toPx())
-        drawRoundRect(Wf.Paper.copy(alpha = 0.9f), cornerRadius = CornerRadius(5.dp.toPx()))
+        drawRoundRect(print.copy(alpha = 0.9f), cornerRadius = CornerRadius(5.dp.toPx()))
         CollageGeometry.cellRects(template.cells, size.width, size.height, gap, gap).forEachIndexed { i, r ->
             val img = photos.getOrNull(i)
             val path = Path().apply { addRoundRect(RoundRect(r.left, r.top, r.right, r.bottom, corner)) }
@@ -82,7 +84,7 @@ fun LiveTemplateThumbnail(
                         filterQuality = FilterQuality.Low,
                     )
                 } else {
-                    drawRect(Wf.Steel, Offset(r.left, r.top), Size(r.width, r.height))
+                    drawRect(hole, Offset(r.left, r.top), Size(r.width, r.height))
                 }
             }
         }

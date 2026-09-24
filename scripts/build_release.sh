@@ -14,7 +14,7 @@ BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
 "$BT/apksigner" verify --min-sdk-version 29 "$APK"
 
 mkdir -p dist
-OUT="dist/WireframePhoto-$VERSION.apk"
+OUT="dist/oh-my-photogrid-$VERSION.apk"
 cp "$APK" "$OUT"
 shasum -a 256 "$OUT" | tee "$OUT.sha256"
 echo "Built $OUT ($(du -h "$OUT" | cut -f1))"

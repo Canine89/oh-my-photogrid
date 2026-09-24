@@ -70,7 +70,7 @@ fun Modifier.pressScale(interactionSource: InteractionSource, pressedScale: Floa
  * the stable graphics-shapes library): cookie → rounded square → soft star → circle, rotating.
  */
 @Composable
-fun MorphingLoader(modifier: Modifier = Modifier, color: Color = Wf.Lime) {
+fun MorphingLoader(modifier: Modifier = Modifier, color: Color = Wf.Accent) {
     val shapes = remember {
         listOf(
             RoundedPolygon.star(numVerticesPerRadius = 9, innerRadius = 0.8f, rounding = CornerRounding(0.1f), innerRounding = CornerRounding(0.1f)),

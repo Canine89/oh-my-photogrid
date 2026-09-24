@@ -19,6 +19,8 @@ import app.wireframephoto.core.Templates
 import app.wireframephoto.ui.EditorViewModel
 import app.wireframephoto.ui.MainActivity
 import app.wireframephoto.ui.editor.Tool
+import app.wireframephoto.ui.theme.AppTheme
+import app.wireframephoto.ui.theme.loadAppTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assume.assumeTrue
@@ -60,9 +62,22 @@ class EditorUiTest {
 
     @Test
     fun home_asksWhatToMake_withPurposeCards() {
+        rule.onNodeWithTag("theme_Darkroom").performClick()
         rule.onNodeWithText("콜라주인가요?", substring = true).assertExists()
         rule.onNodeWithTag("purpose_fold8_cover").assertExists()
         rule.onNodeWithTag("purpose_fold8_main").assertExists()
+    }
+
+    @Test
+    fun home_themeSwitch_changesLookAndIsRemembered() {
+        rule.onNodeWithTag("theme_Album").performClick()
+        rule.onNodeWithText("담아 볼까요", substring = true).assertExists()
+        rule.onNodeWithTag("purpose_fold8_main").assertExists()
+        assertEquals(AppTheme.Album, rule.activity.loadAppTheme())
+
+        rule.onNodeWithTag("theme_Darkroom").performClick()
+        rule.onNodeWithText("콜라주인가요?", substring = true).assertExists()
+        assertEquals(AppTheme.Darkroom, rule.activity.loadAppTheme())
     }
 
     @Test

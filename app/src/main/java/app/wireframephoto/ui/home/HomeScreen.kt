@@ -1,5 +1,6 @@
 package app.wireframephoto.ui.home
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -25,13 +27,21 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -42,6 +52,7 @@ import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.components.BrandMark
 import app.wireframephoto.ui.components.FoldHero
 import app.wireframephoto.ui.components.PurposeCard
+import app.wireframephoto.ui.theme.AppTheme
 import app.wireframephoto.ui.theme.Wf
 
 private val Steps = listOf("쓸 곳 고르기", "사진 고르기", "배치 고르고 저장")
@@ -51,7 +62,7 @@ private val Steps = listOf("쓸 곳 고르기", "사진 고르기", "배치 고�
  * used? — fixes the canvas size, opens the photo picker, and the grid is chosen in the editor.
  */
 @Composable
-fun HomeScreen(onPurpose: (Purpose) -> Unit) {
+fun HomeScreen(theme: AppTheme, onThemeChange: (AppTheme) -> Unit, onPurpose: (Purpose) -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val wide = maxWidth >= 600.dp && maxWidth > maxHeight
@@ -61,11 +72,11 @@ fun HomeScreen(onPurpose: (Purpose) -> Unit) {
                         Modifier.weight(0.9f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 28.dp),
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        Brand()
+                        Brand(theme, onThemeChange)
                         Spacer(Modifier.height(20.dp))
                         FoldHero(height = 260.dp, modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(24.dp))
-                        Headline()
+                        Headline(theme)
                         Spacer(Modifier.height(18.dp))
                         StepChips()
                     }
@@ -92,11 +103,11 @@ fun HomeScreen(onPurpose: (Purpose) -> Unit) {
                 ) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column {
-                            Brand()
+                            Brand(theme, onThemeChange)
                             Spacer(Modifier.height(8.dp))
                             FoldHero(height = 210.dp, modifier = Modifier.fillMaxWidth())
                             Spacer(Modifier.height(18.dp))
-                            Headline()
+                            Headline(theme)
                             Spacer(Modifier.height(14.dp))
                             StepChips()
                         }
@@ -119,22 +130,65 @@ private fun LazyGridScope.purposeItems(onPurpose: (Purpose) -> Unit, previewHeig
 }
 
 @Composable
-private fun Brand() {
+private fun Brand(theme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         BrandMark(Modifier.size(22.dp))
         Spacer(Modifier.width(10.dp))
-        Text("와이어프레임 포토", style = MaterialTheme.typography.titleSmall)
+        Text("oh-my-photogrid", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        ThemeSwitch(theme, onThemeChange)
+    }
+}
+
+/** Two-way pill switch between the looks. Each option is a radio button for TalkBack. */
+@Composable
+private fun ThemeSwitch(theme: AppTheme, onChange: (AppTheme) -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    Row(
+        Modifier.background(Wf.Well, Wf.PillShape).padding(3.dp).selectableGroup(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AppTheme.entries.forEach { option ->
+            val selected = option == theme
+            val container by animateColorAsState(if (selected) Wf.Accent else Wf.Well, Wf.snappy(), label = "themeBg")
+            Box(
+                Modifier
+                    .heightIn(min = 40.dp)
+                    .clip(Wf.PillShape)
+                    .background(container)
+                    .selectable(selected, role = Role.RadioButton) {
+                        if (!selected) {
+                            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                            onChange(option)
+                        }
+                    }
+                    .padding(horizontal = 12.dp)
+                    .testTag("theme_${option.name}"),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    option.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (selected) Wf.OnAccent else Wf.TextDim,
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun Headline() {
+private fun Headline(theme: AppTheme) {
     Column {
         Text(
             buildAnnotatedString {
-                append("어디에 쓸\n")
-                withStyle(SpanStyle(color = Wf.Lime)) { append("콜라주") }
-                append("인가요?")
+                if (theme == AppTheme.Album) {
+                    append("우리 가족 사진,\n어디에 ")
+                    withStyle(SpanStyle(color = Wf.Accent)) { append("담아 볼까요") }
+                    append("?")
+                } else {
+                    append("어디에 쓸\n")
+                    withStyle(SpanStyle(color = Wf.Accent)) { append("콜라주") }
+                    append("인가요?")
+                }
             },
             style = MaterialTheme.typography.displaySmall,
         )
@@ -158,11 +212,11 @@ private fun StepChips() {
                     .padding(start = 6.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(Modifier.size(20.dp).background(if (i == 0) Wf.Lime else Wf.Steel, Wf.PillShape), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(20.dp).background(if (i == 0) Wf.Accent else Wf.Raised, Wf.PillShape), contentAlignment = Alignment.Center) {
                     Text(
                         "${i + 1}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (i == 0) Wf.OnLime else Wf.Paper,
+                        color = if (i == 0) Wf.OnAccent else Wf.Text,
                     )
                 }
                 Spacer(Modifier.width(8.dp))
@@ -185,7 +239,7 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun Footnote() {
     Text(
-        "갤러리에서 사진을 공유 → 와이어프레임 포토로 보내도 시작돼요.\n4:5, 폴드 8 Ultra 크기는 편집 화면의 '크기'에서 고를 수 있어요.",
+        "갤러리에서 사진을 공유 → oh-my-photogrid로 보내도 시작돼요.\n4:5, 폴드 8 Ultra 크기는 편집 화면의 '크기'에서 고를 수 있어요.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.outline,
         modifier = Modifier.padding(top = 12.dp, bottom = 8.dp),

@@ -20,9 +20,9 @@ enum class ExportFormat(val mimeType: String, val extension: String, val compres
 }
 
 object ImageSaver {
-    const val ALBUM = "WireframePhoto"
+    const val ALBUM = "oh-my-photogrid"
 
-    /** Writes [bitmap] to Pictures/WireframePhoto via MediaStore (no permission needed on API 29+). */
+    /** Writes [bitmap] to Pictures/oh-my-photogrid via MediaStore (no permission needed on API 29+). */
     suspend fun save(context: Context, bitmap: Bitmap, format: ExportFormat, date: Date = Date()): Uri =
         withContext(Dispatchers.IO) {
             val resolver = context.contentResolver

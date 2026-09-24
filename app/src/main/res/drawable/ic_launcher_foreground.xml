@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Darkroom brand mark: lime / violet / coral three-cell wireframe inside the 66dp safe zone. -->
+    <path android:fillColor="#FFD4FF4F" android:pathData="M31,32h19a4,4 0,0 1,4 4v36a4,4 0,0 1,-4 4h-19a4,4 0,0 1,-4 -4v-36a4,4 0,0 1,4 -4z" />
+    <path android:fillColor="#FFA78BFA" android:pathData="M62,32h15a4,4 0,0 1,4 4v12a4,4 0,0 1,-4 4h-15a4,4 0,0 1,-4 -4v-12a4,4 0,0 1,4 -4z" />
+    <path android:fillColor="#FFFF7A59" android:pathData="M62,56h15a4,4 0,0 1,4 4v12a4,4 0,0 1,-4 4h-15a4,4 0,0 1,-4 -4v-12a4,4 0,0 1,4 -4z" />
+    <!-- Mountain glyph in the hero cell -->
+    <path android:fillColor="#FF0B0B0E" android:pathData="M29,71l8,-11l6,7l4,-4l6,8z" />
+    <path android:fillColor="#FF0B0B0E" android:pathData="M45,43m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+</vector>

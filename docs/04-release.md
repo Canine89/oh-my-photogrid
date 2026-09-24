@@ -55,11 +55,22 @@ scripts/build_release.sh
 ```
 배포할 때마다 `app/build.gradle.kts`의 `versionCode`를 1씩 올리고, `versionName`도 바꾼다.
 
+### 앱 안 업데이트 (1.4.0부터)
+- 앱은 `https://api.github.com/repos/Canine89/oh-my-photogrid/releases/latest`를 최대 6시간마다 확인한다(`data/UpdateChecker.kt`)
+  - 태그 `vX.Y.Z`가 설치된 `versionName`보다 높으면 홈 화면에 알림을 띄운다
+- **업데이트**를 누르면 릴리스에서 `.apk`로 끝나는 첫 번째 파일을 받는다. 그다음 `PackageInstaller`로 시스템 업데이트 창을 띄운다(`data/UpdateInstaller.kt`)
+  - "이 출처 허용"이 꺼져 있으면 먼저 설정 화면으로 보낸다. 사용자가 허용하고 돌아오면 자동으로 이어서 진행한다
+- 따라서 릴리스를 만들 때 지킬 것:
+  - 태그는 반드시 `vX.Y.Z` 형식으로 붙인다
+  - APK를 릴리스 파일로 첨부한다
+  - Draft나 Pre-release로 만들지 않는다. `latest`에 잡히지 않아서 알림이 가지 않는다
+- 서명 키가 다르면 Android가 업데이트를 거부한다. 그래서 다른 사람이 만든 APK가 이 경로로 설치될 수 없다
+
 ## 5. 기기에 설치
 1. **ADB (권장, 개발자 인증 예외 대상)**
    폴드 8에서 개발자 옵션 → USB 디버깅을 켠 뒤:
    ```bash
-   adb install -r dist/oh-my-photogrid-1.3.0.apk
+   adb install -r dist/oh-my-photogrid-1.4.0.apk
    ```
 2. **파일로 전달**
    APK를 기기로 옮긴 뒤 내 파일 앱에서 열기 → "이 출처 허용" → 설치.

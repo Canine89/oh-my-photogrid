@@ -1,6 +1,7 @@
 package app.wireframephoto.ui.home
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,9 +28,18 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.SystemUpdate
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,6 +57,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.wireframephoto.data.AvailableUpdate
+import app.wireframephoto.data.UpdatePhase
 import app.wireframephoto.ui.Purpose
 import app.wireframephoto.ui.Purposes
 import app.wireframephoto.ui.components.BrandMark
@@ -62,7 +74,16 @@ private val Steps = listOf("쓸 곳 고르기", "사진 고르기", "배치 고�
  * used? — fixes the canvas size, opens the photo picker, and the grid is chosen in the editor.
  */
 @Composable
-fun HomeScreen(theme: AppTheme, onThemeChange: (AppTheme) -> Unit, onPurpose: (Purpose) -> Unit) {
+fun HomeScreen(
+    theme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit,
+    update: AvailableUpdate?,
+    updatePhase: UpdatePhase,
+    onUpdate: (AvailableUpdate) -> Unit,
+    onOpenReleasePage: (AvailableUpdate) -> Unit,
+    onDismissUpdate: (AvailableUpdate) -> Unit,
+    onPurpose: (Purpose) -> Unit,
+) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
             val wide = maxWidth >= 600.dp && maxWidth > maxHeight
@@ -73,6 +94,7 @@ fun HomeScreen(theme: AppTheme, onThemeChange: (AppTheme) -> Unit, onPurpose: (P
                         verticalArrangement = Arrangement.Center,
                     ) {
                         Brand(theme, onThemeChange)
+                        update?.let { UpdateBanner(it, updatePhase, onUpdate, onOpenReleasePage, onDismissUpdate, Modifier.padding(top = 14.dp)) }
                         Spacer(Modifier.height(20.dp))
                         FoldHero(height = 260.dp, modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(24.dp))
@@ -104,6 +126,7 @@ fun HomeScreen(theme: AppTheme, onThemeChange: (AppTheme) -> Unit, onPurpose: (P
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column {
                             Brand(theme, onThemeChange)
+                            update?.let { UpdateBanner(it, updatePhase, onUpdate, onOpenReleasePage, onDismissUpdate, Modifier.padding(top = 12.dp)) }
                             Spacer(Modifier.height(8.dp))
                             FoldHero(height = 210.dp, modifier = Modifier.fillMaxWidth())
                             Spacer(Modifier.height(18.dp))
@@ -136,6 +159,68 @@ private fun Brand(theme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
         Spacer(Modifier.width(10.dp))
         Text("oh-my-photogrid", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         ThemeSwitch(theme, onThemeChange)
+    }
+}
+
+/**
+ * New release on GitHub: one tap downloads it inside the app and opens the system's
+ * "update this app?" screen. If that fails, the release page is offered instead.
+ */
+@Composable
+private fun UpdateBanner(
+    update: AvailableUpdate,
+    phase: UpdatePhase,
+    onUpdate: (AvailableUpdate) -> Unit,
+    onOpenReleasePage: (AvailableUpdate) -> Unit,
+    onDismiss: (AvailableUpdate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = Wf.CardShape,
+        color = Wf.Card,
+        border = BorderStroke(1.dp, Wf.Accent.copy(alpha = 0.5f)),
+        modifier = modifier.fillMaxWidth().testTag("update_banner"),
+    ) {
+        Row(Modifier.padding(start = 16.dp, end = 6.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(36.dp).background(Wf.Accent, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.SystemUpdate, contentDescription = null, tint = Wf.OnAccent, modifier = Modifier.size(20.dp))
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("새 버전(${update.version})이 나왔어요", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    when (phase) {
+                        UpdatePhase.Idle -> "받아서 바로 업데이트해요"
+                        is UpdatePhase.Downloading -> "받는 중… ${(phase.progress * 100).toInt()}%"
+                        UpdatePhase.Installing -> "설치 화면에서 확인해 주세요"
+                        UpdatePhase.Failed -> "설치하지 못했어요. 페이지에서 받아 주세요"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (phase is UpdatePhase.Downloading) {
+                    LinearProgressIndicator(
+                        progress = { phase.progress },
+                        color = Wf.Accent,
+                        trackColor = Wf.Well,
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            val busy = phase is UpdatePhase.Downloading || phase == UpdatePhase.Installing
+            Button(
+                onClick = { if (phase == UpdatePhase.Failed) onOpenReleasePage(update) else onUpdate(update) },
+                enabled = !busy,
+                shape = Wf.PillShape,
+                colors = ButtonDefaults.buttonColors(containerColor = Wf.Accent, contentColor = Wf.OnAccent),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier.testTag("update_get"),
+            ) { Text(if (phase == UpdatePhase.Failed) "페이지 열기" else "업데이트") }
+            IconButton(onClick = { onDismiss(update) }, enabled = !busy, modifier = Modifier.testTag("update_later")) {
+                Icon(Icons.Outlined.Close, contentDescription = "나중에", tint = Wf.TextDim)
+            }
+        }
     }
 }
 

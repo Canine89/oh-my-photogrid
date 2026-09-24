@@ -5,7 +5,7 @@
 - material3-adaptive 1.3.0: WindowSizeClass, 테이블탑 자세 감지
 - AGP 9.4.1 (내장 Kotlin) · Gradle 9.7 · JDK 21
 - minSdk 29 / compileSdk·targetSdk 37
-- 외부 이미지 라이브러리 없이 `ImageDecoder`와 `LruCache`만 쓴다(의존성과 APK 크기 최소화). 네트워크 권한 없음.
+- 외부 이미지 라이브러리 없이 `ImageDecoder`와 `LruCache`만 쓴다(의존성과 APK 크기 최소화). 인터넷은 GitHub 릴리스 확인과 업데이트 다운로드에만 쓴다(1.4.0부터).
 
 ## 2. 아키텍처 (단일 모듈, MVVM)
 
